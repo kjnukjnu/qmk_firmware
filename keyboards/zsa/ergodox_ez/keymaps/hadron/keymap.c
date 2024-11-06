@@ -25,7 +25,7 @@ static const struct hadron_key PROGMEM keymap[][6][14] = {
     {
         {{KC_NO}, {KC_DEL}, {KC_LGUI}, {KC_LALT}, {KC_PRINT_SCREEN}, {KC_NO}, {KC_NO}, {KC_RALT}, {KC_RGUI}, {KC_NO}, {KC_SPACE}, {KC_NO}, {KC_NO}, {KC_NO}, },
 
-        {{FI_LABK /* § (sic!) */}, {KC_NO /* PIPE: RALT + KC_GRAVE */}, {FI_SECT /* < (sic!) */}, {KC_NO /* SHIFT + KC_GRAVE */}, {KC_ENTER}, {KC_NO}, {KC_NO}, {KC_NO}, {KC_NO}, {KC_NO /* layer */}, {KC_NO /* [: RALT + KC_8 */}, {KC_NO /* ]: RALT + KC_9 */}, {KC_NO /* @: RALT + KC_2 */}, {KC_NO /* dead tilde: RALT + KC_RIGHT_BRACKET */}},
+        {{FI_SECT /* § */}, {KC_NO /* PIPE: RALT + FI_LABK */}, {FI_LABK /* < */}, {KC_NO /* >: SHIFT + FI_LABK */}, {KC_ENTER}, {KC_NO}, {KC_NO}, {KC_NO}, {KC_NO}, {KC_NO /* layer */}, {KC_NO /* [: RALT + KC_8 */}, {KC_NO /* ]: RALT + KC_9 */}, {KC_NO /* @: RALT + KC_2 */}, {KC_NO /* dead tilde: RALT + KC_RIGHT_BRACKET */}},
 
         {{KC_LSFT}, {KC_Z}, {KC_X}, {KC_C}, {KC_V}, {KC_B}, {KC_NO /* backslash: RALT + KC_MINUS */}, {KC_NO /* tilde: RALT + KC_RIGHT_BRACKET + KC_SPACE - KC_SPACE */}, {KC_N}, {KC_M}, {FI_COMM}, {FI_DOT}, {FI_MINS}, {KC_RSFT}, },
 
