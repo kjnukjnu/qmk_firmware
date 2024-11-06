@@ -41,12 +41,37 @@ static const struct hadron_key PROGMEM keymap[][6][14] = {
     },
 };
 
+static void blink_led(void)
+{
+    static bool time_valid;
+    static uint16_t last_change;
+    static bool led_1_state = false;
+    uint16_t now = timer_read();
+
+    if (!time_valid)
+    {
+        last_change = now;
+        time_valid = true;
+        return;
+    }
+    if (now - last_change >= 1000)
+    {
+        led_1_state = !led_1_state;
+        last_change = now;
+        if (led_1_state)
+        {
+            ergodox_right_led_1_on();
+        }
+        else
+        {
+            ergodox_right_led_1_off();
+        }
+    }
+}
+
 // this function bypasses the qmk state machine
 bool user_action_exec(keyevent_t event)
 {
-    static unsigned ticks = 0;
-    static bool led_1_state = false;
-
     if (event.type != KEY_EVENT && event.type != TICK_EVENT)
     {
         return false;
@@ -58,19 +83,7 @@ bool user_action_exec(keyevent_t event)
     }
     else
     {
-        if (++ticks > 1000)
-        {
-            led_1_state = !led_1_state;
-            if (led_1_state)
-            {
-                ergodox_right_led_1_on();
-            }
-            else
-            {
-                ergodox_right_led_1_off();
-            }
-            ticks = 0;
-        }
+        blink_led();
     }
     return true;
 }
