@@ -46,7 +46,8 @@ static void blink_led(void)
     static bool time_valid;
     static uint16_t last_change;
     static bool led_1_state = false;
-    uint16_t now = timer_read();
+    uint16_t now = timer_read(); // ms
+    static const uint16_t interval = 1000;
 
     if (!time_valid)
     {
@@ -54,10 +55,10 @@ static void blink_led(void)
         time_valid = true;
         return;
     }
-    if (now - last_change >= 1000)
+    if (now - last_change >= interval)
     {
         led_1_state = !led_1_state;
-        last_change = now;
+        last_change += interval;
         if (led_1_state)
         {
             ergodox_right_led_1_on();
