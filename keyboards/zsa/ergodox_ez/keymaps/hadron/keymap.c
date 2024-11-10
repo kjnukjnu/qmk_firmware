@@ -93,7 +93,7 @@ static void hadron_key_down(uint16_t key)
     }
     else if (hkey->keycode)
     {
-        register_code(hkey->keycode);
+        //register_code(hkey->keycode);
         keyup_code[key] = hkey->keycode;
     }
 }
@@ -102,9 +102,34 @@ static void hadron_key_up(uint16_t key)
 {
     if (keyup_code[key])
     {
-        unregister_code(keyup_code[key]);
+        //unregister_code(keyup_code[key]);
         keyup_code[key] = 0;
     }
+}
+
+static void show_hex(uint8_t val)
+{
+    uint8_t code;
+    if (val == 0)
+    {
+        code = KC_0;
+    }
+    else if (val < 10)
+    {
+        code = KC_1 + val - 1;
+    }
+    else
+    {
+        code = val + KC_A - 10;
+    }
+    register_code(code);
+    unregister_code(code);
+}
+
+static void show_value(uint8_t ix)
+{
+    show_hex(ix >> 4);
+    show_hex(ix & 0xF);
 }
 
 // this function bypasses the qmk state machine
@@ -125,6 +150,18 @@ bool user_action_exec(keyevent_t event)
         {
             hadron_key_up(key);
         }
+        if (event.pressed)
+        {
+            register_code(FI_PLUS);
+            unregister_code(FI_PLUS);
+        }
+        else
+        {
+            register_code(FI_MINS);
+            unregister_code(FI_MINS);
+        }
+        show_value(event.key.row);
+        show_value(event.key.col);
     }
     else
     {
