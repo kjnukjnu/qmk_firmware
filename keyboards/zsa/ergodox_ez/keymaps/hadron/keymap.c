@@ -55,12 +55,10 @@ static const struct hadron_key PROGMEM keymap[][KEY_COUNT] = {
 static void hadron_tick_event(void)
 {
     static bool time_valid;
-    static uint32_t last_change;
+    static uint16_t last_change;
     static bool led_1_state = false;
-    static bool led_3_state = false;
-    uint32_t now = timer_read32(); // ms
-    static const uint32_t interval = 1000;
-    static uint16_t calls;
+    uint16_t now = timer_read(); // ms
+    static const uint16_t interval = 1000;
 
     if (!time_valid)
     {
@@ -68,7 +66,7 @@ static void hadron_tick_event(void)
         time_valid = true;
         return;
     }
-    if (now - last_change >= interval)
+    if ((uint16_t)(now - last_change) >= interval)
     {
         led_1_state = !led_1_state;
         last_change += interval;
@@ -80,19 +78,6 @@ static void hadron_tick_event(void)
         {
             ergodox_right_led_1_off();
         }
-    }
-    if (++calls > 1000)
-    {
-        led_3_state = !led_3_state;
-        if (led_3_state)
-        {
-            ergodox_right_led_3_on();
-        }
-        else
-        {
-            ergodox_right_led_3_off();
-        }
-        calls = 0;
     }
 }
 
