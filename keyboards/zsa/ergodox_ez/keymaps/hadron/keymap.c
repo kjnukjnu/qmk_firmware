@@ -33,7 +33,7 @@ static const struct hadron_key PROGMEM keymap[][KEY_COUNT] = {
 
         {FI_SECT /* § */}, { /* PIPE: RALT + FI_LABK */}, {FI_LABK /* < */}, { /* >: SHIFT + FI_LABK */}, {KC_ENT}, {}, {}, {}, {}, { /* layer */}, { /* [: RALT + KC_8 */}, { /* ]: RALT + KC_9 */}, { /* @: RALT + KC_2 */}, { /* dead tilde: RALT + KC_RIGHT_BRACKET */},
 
-        {}, {KC_DEL}, {KC_LGUI}, {KC_LALT}, {KC_PSCR}, {}, {}, {KC_RALT}, {KC_RGUI}, {}, {KC_SPC}, {}, {}, {},
+        {}, {KC_DEL}, {KC_LGUI}, {KC_LALT}, {FI_ARNG}, {}, {KC_MUTE}, {KC_RALT}, {KC_RGUI}, {}, {KC_SPC}, {}, {KC_BSPC}, {},
     },
 
     /* NAVIGATION */
@@ -48,7 +48,7 @@ static const struct hadron_key PROGMEM keymap[][KEY_COUNT] = {
 
         {/* MAC */}, {KC_BRK}, {KC_INS}, {}, {KC_ENT}, {}, {}, {}, {}, {/*layer*/}, {KC_VOLD}, {KC_VOLU}, {KC_MPRV}, {KC_MNXT},
 
-        {}, {KC_DEL}, {KC_LGUI}, {KC_PSCR}, {}, {}, {KC_RALT}, {KC_RGUI}, {}, {KC_SPC}, {}, {}, {}, {},
+        {}, {KC_DEL}, {KC_LGUI}, {KC_LALT}, {KC_PSCR}, {}, {KC_MUTE}, {KC_RALT}, {KC_RGUI}, {}, {KC_SPC}, {}, {KC_BSPC}, {},
     },
 };
 
