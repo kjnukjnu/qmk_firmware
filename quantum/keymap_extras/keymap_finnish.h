@@ -28,7 +28,7 @@
 // clang-format off
 
 // Aliases
-#define FI_SECT KC_NUBS // §
+#define FI_SECT KC_GRV  // §
 #define FI_1    KC_1    // 1
 #define FI_2    KC_2    // 2
 #define FI_3    KC_3    // 3
@@ -65,7 +65,7 @@
 #define FI_ODIA KC_SCLN // Ö
 #define FI_ADIA KC_QUOT // Ä
 #define FI_QUOT KC_NUHS // '
-#define FI_LABK KC_GRV  // <
+#define FI_LABK KC_NUBS // <
 #define FI_Z    KC_Z    // Z
 #define FI_X    KC_X    // X
 #define FI_C    KC_C    // C
