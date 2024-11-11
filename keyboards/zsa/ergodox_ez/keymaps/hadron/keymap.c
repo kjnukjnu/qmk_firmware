@@ -4,7 +4,7 @@
 
 const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS]; // required by quantum, not used by us
 
-#define KEY_COUNT (6 * 14)
+#define KEY_COUNT (MATRIX_ROWS * MATRIX_COLS)
 
 enum layers {
     BASE,
@@ -116,7 +116,7 @@ bool user_action_exec(keyevent_t event)
     }
     if (event.type == KEY_EVENT)
     {
-        uint16_t key = event.key.row + event.key.col * 14;
+        uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
         if (event.pressed)
         {
             hadron_key_down(key);
