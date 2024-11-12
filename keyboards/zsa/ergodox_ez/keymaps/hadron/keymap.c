@@ -11,44 +11,38 @@ enum layers {
     NAVIGATION
 };
 
-struct hadron_key
-{
-    uint8_t keycode;
-    void (*func)(uint16_t key, bool down);
-};
-
 //static_assert(MATRIX_ROWS == 6);
 //static_assert(MATRIX_COLS == 14);
 
-static const struct hadron_key PROGMEM keymap[][KEY_COUNT] = {
+static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
     {
-        {KC_ESC}, {KC_1}, {KC_2}, {KC_3}, {KC_4}, {KC_5}, {FI_DIAE}, {FI_ACUT}, {KC_6}, {KC_7}, {KC_8}, {KC_9}, {KC_0}, {FI_PLUS},
+        KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, FI_DIAE, FI_ACUT, KC_6, KC_7, KC_8, KC_9, KC_0, FI_PLUS,
 
-        {KC_TAB}, {KC_Q}, {KC_W}, {KC_E}, {KC_R}, {KC_T}, { /* {: RALT + KC_7 */}, { /* }: RALT + KC_0 */}, {KC_Y}, {KC_U}, {KC_I}, {KC_O}, {KC_P}, {KC_BSLS},
+        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_NO /* : RALT + KC_7 */, KC_NO /* : RALT + KC_0 */, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,
 
-        {KC_LCTL}, {KC_A}, {KC_S}, {KC_D}, {KC_F}, {KC_G}, {}, {}, {KC_H}, {KC_J}, {KC_K}, {KC_L}, {FI_ODIA}, { /* ctrl/ä (FI_ADIA)) */},
+        KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KC_NO /* ctrl/ä (FI_ADIA)) */,
 
-        {KC_LSFT}, {KC_Z}, {KC_X}, {KC_C}, {KC_V}, {KC_B}, { /* backslash: RALT + KC_MINUS */}, { /* tilde: RALT + KC_RIGHT_BRACKET + KC_SPACE - KC_SPACE */}, {KC_N}, {KC_M}, {FI_COMM}, {FI_DOT}, {FI_MINS}, {KC_RSFT},
+        KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_NO /* backslash: RALT + KC_MINUS */, KC_NO /* tilde: RALT + KC_RIGHT_BRACKET + KC_SPACE - KC_SPACE */, KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KC_RSFT,
 
-        {FI_SECT /* § */}, { /* PIPE: RALT + FI_LABK */}, {FI_LABK /* < */}, { /* >: SHIFT + FI_LABK */}, {KC_ENT}, {}, {}, {}, {}, { /* layer */}, { /* [: RALT + KC_8 */}, { /* ]: RALT + KC_9 */}, { /* @: RALT + KC_2 */}, { /* dead tilde: RALT + KC_RIGHT_BRACKET */},
+        FI_SECT, KC_NO /* PIPE: RALT + FI_LABK */, FI_LABK, KC_NO /* >: SHIFT + FI_LABK */, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /* layer */, KC_NO /* [: RALT + KC_8 */, KC_NO /* ]: RALT + KC_9 */, KC_NO /* @: RALT + KC_2 */, KC_NO /* dead tilde: RALT + KC_RIGHT_BRACKET */,
 
-        {}, {KC_DEL}, {KC_LGUI}, {KC_LALT}, {FI_ARNG}, {}, {KC_MUTE}, {KC_RALT}, {KC_RGUI}, {}, {KC_SPC}, {}, {KC_BSPC}, {},
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
     {
-        {KC_ESC}, {KC_F1}, {KC_F2}, {KC_F3}, {KC_F4}, {KC_F5}, {}, {}, {KC_F6}, {KC_F7}, {KC_F8}, {KC_F9}, {KC_F10}, {KC_F11},
+        KC_ESC, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_NO, KC_NO, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11,
 
-        {KC_TAB}, {KC_PGUP}, {/*prev word*/}, {KC_UP}, {/*next word*/}, {}, {/* {: RALT + KC_7 */}, {/* }: RALT + KC_0 */}, {KC_Y}, {KC_BTN1/*?*/}, {KC_MS_U}, {KC_BTN2/*?*/}, {}, {KC_F12},
+        KC_TAB, KC_PGUP, KC_NO /* CTRL + LEFT: prev word*/, KC_UP, KC_NO /* CTRL + RIGHT next word*/, KC_NO, KC_NO /* : RALT + KC_7 */, KC_NO /* : RALT + KC_0 */, KC_Y, KC_BTN1/*?*/, KC_MS_U, KC_BTN2/*?*/, KC_NO, KC_F12,
 
-        {KC_LCTL}, {KC_HOME}, {KC_LEFT}, {KC_DOWN}, {KC_RGHT}, {KC_END}, {}, {}, {KC_WBAK}, {KC_MS_L}, {KC_MS_D}, {KC_MS_R}, {/*ctrl alt*/}, {/*ctrl/Ä (FI_ADIA)*/},
+        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_NO /*ctrl alt*/, KC_NO /*ctrl/Ä (FI_ADIA)*/,
 
-        {KC_LSFT}, {}, {}, {}, {KC_PGDN}, {}, {}, {}, {}, {}, {KC_MPLY}, {}, {FI_MINS}, {KC_RSFT},
+        KC_LSFT, KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KC_RSFT,
 
-        {/* MAC */}, {KC_BRK}, {KC_INS}, {}, {KC_ENT}, {}, {}, {}, {}, {/*layer*/}, {KC_VOLD}, {KC_VOLU}, {KC_MPRV}, {KC_MNXT},
+        KC_NO /* MAC */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /*layer*/, KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
 
-        {}, {KC_DEL}, {KC_LGUI}, {KC_LALT}, {KC_PSCR}, {}, {KC_MUTE}, {KC_RALT}, {KC_RGUI}, {}, {KC_SPC}, {}, {KC_BSPC}, {},
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
 };
 
@@ -81,30 +75,37 @@ static void hadron_tick_event(void)
     }
 }
 
-static uint8_t keyup_code[KEY_COUNT];
+static intptr_t keyup_info[KEY_COUNT];
 static unsigned layer = 0;
 
 static void hadron_key_down(uint16_t key)
 {
-    const struct hadron_key *hkey = &keymap[layer][key];
-    if (hkey->func)
+    const intptr_t *key_info = &keymap[layer][key];
+
+    if (*key_info > 255)
     {
         // TODO
     }
-    else if (hkey->keycode)
+    else if (*key_info != KC_NO)
     {
-        register_code(hkey->keycode);
-        keyup_code[key] = hkey->keycode;
+        register_code(*key_info);
+        keyup_info[key] = *key_info;
     }
 }
 
 static void hadron_key_up(uint16_t key)
 {
-    if (keyup_code[key])
+    intptr_t *key_info = &keyup_info[key];
+
+    if (*key_info> 255)
     {
-        unregister_code(keyup_code[key]);
-        keyup_code[key] = 0;
+        // TODO
     }
+    else if (*key_info != KC_NO)
+    {
+        unregister_code(*key_info);
+    }
+    *key_info = KC_NO;
 }
 
 // this function bypasses the qmk state machine
