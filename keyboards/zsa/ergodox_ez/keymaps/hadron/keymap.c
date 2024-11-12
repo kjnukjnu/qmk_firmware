@@ -14,6 +14,27 @@ enum layers {
 //static_assert(MATRIX_ROWS == 6);
 //static_assert(MATRIX_COLS == 14);
 
+typedef bool (*key_func_t)(bool down);
+#define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
+
+static intptr_t keyup_info[KEY_COUNT];
+
+static unsigned layer = 0;
+
+static bool navigation_layer(bool down)
+{
+    if (down)
+    {
+        ergodox_right_led_3_on();
+    }
+    else
+    {
+        ergodox_right_led_3_off();
+    }
+    layer = down;
+    return false;
+}
+
 static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
     {
@@ -21,11 +42,11 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_NO /* : RALT + KC_7 */, KC_NO /* : RALT + KC_0 */, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,
 
-        KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KC_NO /* ctrl/ä (FI_ADIA)) */,
+        KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KC_RCTL /* ctrl/ä (FI_ADIA)) */,
 
         KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_NO /* backslash: RALT + KC_MINUS */, KC_NO /* tilde: RALT + KC_RIGHT_BRACKET + KC_SPACE - KC_SPACE */, KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KC_RSFT,
 
-        FI_SECT, KC_NO /* PIPE: RALT + FI_LABK */, FI_LABK, KC_NO /* >: SHIFT + FI_LABK */, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /* layer */, KC_NO /* [: RALT + KC_8 */, KC_NO /* ]: RALT + KC_9 */, KC_NO /* @: RALT + KC_2 */, KC_NO /* dead tilde: RALT + KC_RIGHT_BRACKET */,
+        FI_SECT, KC_NO /* PIPE: RALT + FI_LABK */, FI_LABK, KC_NO /* >: SHIFT + FI_LABK */, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(navigation_layer), KC_NO /* [: RALT + KC_8 */, KC_NO /* ]: RALT + KC_9 */, KC_NO /* @: RALT + KC_2 */, KC_NO /* dead tilde: RALT + KC_RIGHT_BRACKET */,
 
         KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
@@ -46,50 +67,19 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     },
 };
 
-static void hadron_tick_event(void)
-{
-    static bool time_valid;
-    static uint16_t last_change;
-    static bool led_1_state = false;
-    uint16_t now = timer_read(); // ms
-    static const uint16_t interval = 1000;
-
-    if (!time_valid)
-    {
-        last_change = now;
-        time_valid = true;
-        return;
-    }
-    if ((uint16_t)(now - last_change) >= interval)
-    {
-        led_1_state = !led_1_state;
-        last_change += interval;
-        if (led_1_state)
-        {
-            ergodox_right_led_1_on();
-        }
-        else
-        {
-            ergodox_right_led_1_off();
-        }
-    }
-}
-
-static intptr_t keyup_info[KEY_COUNT];
-static unsigned layer = 0;
-
 static void hadron_key_down(uint16_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
 
+    keyup_info[key] = *key_info;
     if (*key_info > 255)
     {
-        // TODO
+        key_func_t func = (key_func_t)*key_info;
+        (void)func(true);
     }
     else if (*key_info != KC_NO)
     {
         register_code(*key_info);
-        keyup_info[key] = *key_info;
     }
 }
 
@@ -97,9 +87,10 @@ static void hadron_key_up(uint16_t key)
 {
     intptr_t *key_info = &keyup_info[key];
 
-    if (*key_info> 255)
+    if (*key_info > 255)
     {
-        // TODO
+        key_func_t func = (key_func_t)*key_info;
+        (void)func(false);
     }
     else if (*key_info != KC_NO)
     {
@@ -129,7 +120,7 @@ bool user_action_exec(keyevent_t event)
     }
     else
     {
-        hadron_tick_event();
+        // TODO
     }
     return true;
 }
