@@ -27,27 +27,40 @@ static bool keycode_active(uint8_t keycode)
     return keycode_active_status[keycode];
 }
 
+static uint8_t keycode_plain(int keycode)
+{
+    return keycode < 0 ? -keycode : keycode;
+}
+
+static bool keycode_is_down(int keycode)
+{
+    return keycode >= 0;
+}
+
 static void keycode_send(int keycode)
 {
-    int ix = (keycode < 0 ? -keycode : keycode);
-    if (keycode_active_status[ix] == (keycode >= 0))
+    int ix = keycode_plain(keycode);
+    if (keycode == KC_NO || keycode_active_status[ix] == keycode_is_down(keycode))
     {
         return;
     }
-    if (keycode >= 0)
+    if (keycode_is_down(keycode))
     {
-        register_code(keycode);
+        register_code(ix);
     }
     else
     {
-        unregister_code(-keycode);
+        unregister_code(ix);
     }
-    keycode_active_status[ix] = keycode >= 0;
+    keycode_active_status[ix] = keycode_is_down(keycode);
 }
 
 static void tmp_keycode(int keycode)
 {
-    if (tmp_keycode_count >= MAX_TMP_KEYCODES)
+    int ix = keycode_plain(keycode);
+    if (keycode == KC_NO ||
+        tmp_keycode_count >= MAX_TMP_KEYCODES ||
+        keycode_active_status[ix] == keycode_is_down(keycode))
     {
         return;
     }
@@ -82,15 +95,21 @@ static void navigation_layer(bool down)
 
 static void four_dollar(bool down)
 {
-    if (down)
+    if (!down)
     {
-        if (shift_active() & !ctrl_alt_gui_active())
-        {
-            tmp_keycode(-KC_LSFT);
-            tmp_keycode(-KC_RSFT);
-            tmp_keycode(KC_RALT);
-            tmp_keycode(KC_4);
-        }
+        return;
+    }
+    if (shift_active() & !ctrl_alt_gui_active())
+    {
+        tmp_keycode(-KC_LSFT);
+        tmp_keycode(-KC_RSFT);
+        tmp_keycode(KC_RALT);
+        tmp_keycode(KC_4);
+    }
+    else
+    {
+        keycode_send(KC_4);
+        keyup_info[4] = KC_4;
     }
 }
 
@@ -158,6 +177,14 @@ static void hadron_key_up(uint16_t key)
     *key_info = KC_NO;
 }
 
+static void clean_tmp_keycodes(void)
+{
+    while (tmp_keycode_count > 0)
+    {
+        keycode_send(-tmp_keycodes[--tmp_keycode_count]);
+    }
+}
+
 // this function bypasses the qmk state machine
 bool user_action_exec(keyevent_t event)
 {
@@ -168,6 +195,7 @@ bool user_action_exec(keyevent_t event)
     if (event.type == KEY_EVENT)
     {
         uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
+        clean_tmp_keycodes();
         if (event.pressed)
         {
             hadron_key_down(key);
