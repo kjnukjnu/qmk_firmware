@@ -11,17 +11,63 @@ enum layers {
     NAVIGATION
 };
 
-//static_assert(MATRIX_ROWS == 6);
-//static_assert(MATRIX_COLS == 14);
+static unsigned layer = 0;
 
-typedef bool (*key_func_t)(bool down);
+typedef void (*key_func_t)(bool down);
 #define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
 
 static intptr_t keyup_info[KEY_COUNT];
+static bool keycode_active_status[255];
+#define MAX_TMP_KEYCODES 10
+static int tmp_keycodes[MAX_TMP_KEYCODES];
+static int tmp_keycode_count;
 
-static unsigned layer = 0;
+static bool keycode_active(uint8_t keycode)
+{
+    return keycode_active_status[keycode];
+}
 
-static bool navigation_layer(bool down)
+static void keycode_send(int keycode)
+{
+    int ix = (keycode < 0 ? -keycode : keycode);
+    if (keycode_active_status[ix] == (keycode >= 0))
+    {
+        return;
+    }
+    if (keycode >= 0)
+    {
+        register_code(keycode);
+    }
+    else
+    {
+        unregister_code(-keycode);
+    }
+    keycode_active_status[ix] = keycode >= 0;
+}
+
+static void tmp_keycode(int keycode)
+{
+    if (tmp_keycode_count >= MAX_TMP_KEYCODES)
+    {
+        return;
+    }
+    keycode_send(keycode);
+    tmp_keycodes[tmp_keycode_count++] = keycode;
+}
+
+static bool shift_active(void)
+{
+    return keycode_active(KC_LSFT) || keycode_active(KC_RSFT);
+}
+
+static bool ctrl_alt_gui_active(void)
+{
+    return keycode_active(KC_LCTL) || keycode_active(KC_RCTL) ||
+        keycode_active(KC_LALT) || keycode_active(KC_RALT) ||
+        keycode_active(KC_LGUI) || keycode_active(KC_RGUI);
+}
+
+static void navigation_layer(bool down)
 {
     if (down)
     {
@@ -32,13 +78,26 @@ static bool navigation_layer(bool down)
         ergodox_right_led_3_off();
     }
     layer = down;
-    return false;
+}
+
+static void four_dollar(bool down)
+{
+    if (down)
+    {
+        if (shift_active() & !ctrl_alt_gui_active())
+        {
+            tmp_keycode(-KC_LSFT);
+            tmp_keycode(-KC_RSFT);
+            tmp_keycode(KC_RALT);
+            tmp_keycode(KC_4);
+        }
+    }
 }
 
 static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
     {
-        KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, FI_DIAE, FI_ACUT, KC_6, KC_7, KC_8, KC_9, KC_0, FI_PLUS,
+        KC_ESC, KC_1, KC_2, KC_3, KCFUNC(four_dollar), KC_5, FI_DIAE, FI_ACUT, KC_6, KC_7, KC_8, KC_9, KC_0, FI_PLUS,
 
         KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_NO /* : RALT + KC_7 */, KC_NO /* : RALT + KC_0 */, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,
 
@@ -55,7 +114,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     {
         KC_ESC, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_NO, KC_NO, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11,
 
-        KC_TAB, KC_PGUP, KC_NO /* CTRL + LEFT: prev word*/, KC_UP, KC_NO /* CTRL + RIGHT next word*/, KC_NO, KC_NO /* : RALT + KC_7 */, KC_NO /* : RALT + KC_0 */, KC_Y, KC_BTN2, KC_MS_U, KC_BTN1, KC_NO, KC_F12,
+        KC_TAB, KC_PGUP, KC_NO /* CTRL + LEFT: prev word/CTRL-W*/, KC_UP, KC_NO /* CTRL + RIGHT next word*/, KC_NO, KC_NO /* : RALT + KC_7 */, KC_NO /* : RALT + KC_0 */, KC_Y, KC_BTN2, KC_MS_U, KC_BTN1, KC_NO, KC_F12,
 
         KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_NO /*ctrl alt*/, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
 
@@ -75,11 +134,11 @@ static void hadron_key_down(uint16_t key)
     if (*key_info > 255)
     {
         key_func_t func = (key_func_t)*key_info;
-        (void)func(true);
+        func(true);
     }
     else if (*key_info != KC_NO)
     {
-        register_code(*key_info);
+        keycode_send(*key_info);
     }
 }
 
@@ -90,11 +149,11 @@ static void hadron_key_up(uint16_t key)
     if (*key_info > 255)
     {
         key_func_t func = (key_func_t)*key_info;
-        (void)func(false);
+        func(false);
     }
     else if (*key_info != KC_NO)
     {
-        unregister_code(*key_info);
+        keycode_send(-*key_info);
     }
     *key_info = KC_NO;
 }
