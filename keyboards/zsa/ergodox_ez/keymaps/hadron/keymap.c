@@ -102,16 +102,13 @@ static void keycode_send(dir_keycode_t dir_code)
         unregister_code(code);
     }
     keycode_active_status[code] = keycode_is_press(dir_code);
-    if (modbit != 0)
+    if (keycode_is_press(dir_code))
     {
-        if (keycode_is_press(dir_code))
-        {
-            modifiers |= (1U << (modbit - 1));
-        }
-        else
-        {
-            modifiers &= ~(1U << (modbit - 1));
-        }
+        modifiers |= modbit;
+    }
+    else
+    {
+        modifiers &= ~modbit;
     }
 }
 
