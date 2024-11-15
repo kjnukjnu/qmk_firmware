@@ -13,59 +13,74 @@ enum layers {
 
 static unsigned layer = 0;
 
-typedef void (*key_func_t)(bool down);
+typedef uint8_t key_t; // physical switch on the keyboard
+typedef uint8_t keycode_t; // HID keycode reported via USB
+typedef int dir_key_t; // physical switch on the keyboard, negative == up
+typedef int dir_keycode_t; // HID keycode: negative == up
+
+typedef void (*key_func_t)(key_t key);
 #define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
 
 static intptr_t keyup_info[KEY_COUNT];
+
+// todo: more efficient status of modifiers
 static bool keycode_active_status[255];
+
 #define MAX_TMP_KEYCODES 10
-static int tmp_keycodes[MAX_TMP_KEYCODES];
+static dir_keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
 static int tmp_keycode_count;
 
-static bool keycode_active(uint8_t keycode)
+static bool keycode_active(keycode_t code)
 {
-    return keycode_active_status[keycode];
+    return keycode_active_status[code];
 }
 
-static uint8_t keycode_plain(int keycode)
+static keycode_t keycode_plain(dir_keycode_t dir_code)
 {
-    return keycode < 0 ? -keycode : keycode;
+    return dir_code < 0 ? -dir_code : dir_code;
 }
 
-static bool keycode_is_down(int keycode)
+static bool keycode_is_down(dir_keycode_t dir_code)
 {
-    return keycode >= 0;
+    return dir_code >= 0;
 }
 
-static void keycode_send(int keycode)
+static void keycode_send(dir_keycode_t dir_code)
 {
-    int ix = keycode_plain(keycode);
-    if (keycode == KC_NO || keycode_active_status[ix] == keycode_is_down(keycode))
+    keycode_t code = keycode_plain(dir_code);
+    if (dir_code == KC_NO ||
+        keycode_active_status[code] == keycode_is_down(dir_code))
     {
         return;
     }
-    if (keycode_is_down(keycode))
+    if (keycode_is_down(dir_code))
     {
-        register_code(ix);
+        register_code(code);
     }
     else
     {
-        unregister_code(ix);
+        unregister_code(code);
     }
-    keycode_active_status[ix] = keycode_is_down(keycode);
+    keycode_active_status[code] = keycode_is_down(dir_code);
 }
 
-static void tmp_keycode(int keycode)
+static void simple_key_down(key_t key, keycode_t code)
 {
-    int ix = keycode_plain(keycode);
-    if (keycode == KC_NO ||
+    keycode_send(code);
+    keyup_info[key] = code;
+}
+
+static void tmp_keycode(dir_keycode_t dir_code)
+{
+    keycode_t code = keycode_plain(dir_code);
+    if (dir_code == KC_NO ||
         tmp_keycode_count >= MAX_TMP_KEYCODES ||
-        keycode_active_status[ix] == keycode_is_down(keycode))
+        keycode_active_status[code] == keycode_is_down(dir_code))
     {
         return;
     }
-    keycode_send(keycode);
-    tmp_keycodes[tmp_keycode_count++] = keycode;
+    keycode_send(dir_code);
+    tmp_keycodes[tmp_keycode_count++] = dir_code;
 }
 
 static bool shift_active(void)
@@ -80,27 +95,25 @@ static bool ctrl_alt_gui_active(void)
         keycode_active(KC_LGUI) || keycode_active(KC_RGUI);
 }
 
-static void navigation_layer(bool down)
+static void navigation_layer_off(key_t key)
 {
-    if (down)
-    {
-        ergodox_right_led_3_on();
-    }
-    else
-    {
-        ergodox_right_led_3_off();
-    }
-    layer = down;
+    ergodox_right_led_3_off();
+    layer = BASE;
 }
 
-static void four_dollar(bool down)
+static void navigation_layer_on(key_t key)
 {
-    if (!down)
-    {
-        return;
-    }
+    ergodox_right_led_3_on();
+    layer = NAVIGATION;
+    keyup_info[key] = KCFUNC(navigation_layer_off);
+}
+
+static void four_dollar(key_t key)
+{
     if (shift_active() & !ctrl_alt_gui_active())
     {
+        /* TODO: instead of sending tmp keycodes, give the desired modifier
+         * setup and keycode(s) after that. */
         tmp_keycode(-KC_LSFT);
         tmp_keycode(-KC_RSFT);
         tmp_keycode(KC_RALT);
@@ -108,8 +121,7 @@ static void four_dollar(bool down)
     }
     else
     {
-        keycode_send(KC_4);
-        keyup_info[4] = KC_4;
+        simple_key_down(key, KC_4);
     }
 }
 
@@ -124,7 +136,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_NO /* backslash: RALT + KC_MINUS */, KC_NO /* tilde: RALT + KC_RIGHT_BRACKET + KC_SPACE - KC_SPACE */, KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KC_RSFT,
 
-        FI_SECT, KC_NO /* PIPE: RALT + FI_LABK */, FI_LABK, KC_NO /* >: SHIFT + FI_LABK */, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(navigation_layer), KC_NO /* [: RALT + KC_8 */, KC_NO /* ]: RALT + KC_9 */, KC_NO /* @: RALT + KC_2 */, KC_NO /* dead tilde: RALT + KC_RIGHT_BRACKET */,
+        FI_SECT, KC_NO /* PIPE: RALT + FI_LABK */, FI_LABK, KC_NO /* >: SHIFT + FI_LABK */, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(navigation_layer_on), KC_NO /* [: RALT + KC_8 */, KC_NO /* ]: RALT + KC_9 */, KC_NO /* @: RALT + KC_2 */, KC_NO /* dead tilde: RALT + KC_RIGHT_BRACKET */,
 
         KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
@@ -149,15 +161,14 @@ static void hadron_key_down(uint16_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
 
-    keyup_info[key] = *key_info;
     if (*key_info > 255)
     {
         key_func_t func = (key_func_t)*key_info;
-        func(true);
+        func(key);
     }
     else if (*key_info != KC_NO)
     {
-        keycode_send(*key_info);
+        simple_key_down(key, *key_info);
     }
 }
 
@@ -168,7 +179,7 @@ static void hadron_key_up(uint16_t key)
     if (*key_info > 255)
     {
         key_func_t func = (key_func_t)*key_info;
-        func(false);
+        func(key);
     }
     else if (*key_info != KC_NO)
     {
