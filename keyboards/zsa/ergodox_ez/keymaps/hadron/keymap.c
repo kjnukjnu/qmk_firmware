@@ -26,9 +26,57 @@ static intptr_t key_release_info[KEY_COUNT];
 // todo: more efficient status of modifiers
 static bool keycode_active_status[255];
 
+enum modifier_bit
+{
+    MODBIT_NONE = 0,
+    MODBIT_LSFT = 1,
+    MODBIT_RSFT,
+    MODBIT_LCTL,
+    MODBIT_RCTL,
+    MODBIT_LALT,
+    MODBIT_RALT,
+    MODBIT_LGUI,
+    MODBIT_RGUI
+};
+
+static uint8_t modifiers;
+
+static const keycode_t PROGMEM modbit_keycodes[] =
+{ KC_NO, KC_LSFT, KC_RSFT, KC_LCTL, KC_RCTL, KC_LALT, KC_RALT, KC_LGUI, KC_RGUI };
+
 #define MAX_TMP_KEYCODES 10
 static dir_keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
 static int tmp_keycode_count;
+
+static enum modifier_bit keycode_modbit(keycode_t code)
+{
+    switch (code)
+    {
+    case KC_LSFT:
+        return MODBIT_LSFT;
+    case KC_RSFT:
+        return MODBIT_RSFT;
+    case KC_LCTL:
+        return MODBIT_LCTL;
+    case KC_RCTL:
+        return MODBIT_RCTL;
+    case KC_LALT:
+        return MODBIT_LALT;
+    case KC_RALT:
+        return MODBIT_RALT;
+    case KC_LGUI:
+        return MODBIT_LGUI;
+    case KC_RGUI:
+        return MODBIT_RGUI;
+    default:
+        return MODBIT_NONE;
+    };
+}
+
+static keycode_t modbit_keycode(enum modifier_bit modbit)
+{
+    return modbit_keycodes[modbit];
+}
 
 static bool keycode_active(keycode_t code)
 {
@@ -48,6 +96,7 @@ static bool keycode_is_press(dir_keycode_t dir_code)
 static void keycode_send(dir_keycode_t dir_code)
 {
     keycode_t code = keycode_plain(dir_code);
+    enum modifier_bit modbit = keycode_modbit(code);
     if (dir_code == KC_NO ||
         keycode_active_status[code] == keycode_is_press(dir_code))
     {
@@ -62,6 +111,17 @@ static void keycode_send(dir_keycode_t dir_code)
         unregister_code(code);
     }
     keycode_active_status[code] = keycode_is_press(dir_code);
+    if (modbit != MODBIT_NONE)
+    {
+        if (keycode_is_press(dir_code))
+        {
+            modifiers |= (1U << (modbit - 1));
+        }
+        else
+        {
+            modifiers &= ~(1U << (modbit - 1));
+        }
+    }
 }
 
 static void simple_key_press(key_t key, keycode_t code)
