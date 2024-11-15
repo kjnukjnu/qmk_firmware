@@ -15,13 +15,13 @@ static unsigned layer = 0;
 
 typedef uint8_t key_t; // physical switch on the keyboard
 typedef uint8_t keycode_t; // HID keycode reported via USB
-typedef int dir_key_t; // physical switch on the keyboard, negative == up
-typedef int dir_keycode_t; // HID keycode: negative == up
+typedef int dir_key_t; // physical switch on the keyboard, negative == release
+typedef int dir_keycode_t; // HID keycode: negative == release
 
 typedef void (*key_func_t)(key_t key);
 #define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
 
-static intptr_t keyup_info[KEY_COUNT];
+static intptr_t key_release_info[KEY_COUNT];
 
 // todo: more efficient status of modifiers
 static bool keycode_active_status[255];
@@ -40,7 +40,7 @@ static keycode_t keycode_plain(dir_keycode_t dir_code)
     return dir_code < 0 ? -dir_code : dir_code;
 }
 
-static bool keycode_is_down(dir_keycode_t dir_code)
+static bool keycode_is_press(dir_keycode_t dir_code)
 {
     return dir_code >= 0;
 }
@@ -49,11 +49,11 @@ static void keycode_send(dir_keycode_t dir_code)
 {
     keycode_t code = keycode_plain(dir_code);
     if (dir_code == KC_NO ||
-        keycode_active_status[code] == keycode_is_down(dir_code))
+        keycode_active_status[code] == keycode_is_press(dir_code))
     {
         return;
     }
-    if (keycode_is_down(dir_code))
+    if (keycode_is_press(dir_code))
     {
         register_code(code);
     }
@@ -61,13 +61,13 @@ static void keycode_send(dir_keycode_t dir_code)
     {
         unregister_code(code);
     }
-    keycode_active_status[code] = keycode_is_down(dir_code);
+    keycode_active_status[code] = keycode_is_press(dir_code);
 }
 
-static void simple_key_down(key_t key, keycode_t code)
+static void simple_key_press(key_t key, keycode_t code)
 {
     keycode_send(code);
-    keyup_info[key] = code;
+    key_release_info[key] = code;
 }
 
 static void tmp_keycode(dir_keycode_t dir_code)
@@ -75,7 +75,7 @@ static void tmp_keycode(dir_keycode_t dir_code)
     keycode_t code = keycode_plain(dir_code);
     if (dir_code == KC_NO ||
         tmp_keycode_count >= MAX_TMP_KEYCODES ||
-        keycode_active_status[code] == keycode_is_down(dir_code))
+        keycode_active_status[code] == keycode_is_press(dir_code))
     {
         return;
     }
@@ -105,7 +105,7 @@ static void navigation_layer_on(key_t key)
 {
     ergodox_right_led_3_on();
     layer = NAVIGATION;
-    keyup_info[key] = KCFUNC(navigation_layer_off);
+    key_release_info[key] = KCFUNC(navigation_layer_off);
 }
 
 static void four_dollar(key_t key)
@@ -121,7 +121,7 @@ static void four_dollar(key_t key)
     }
     else
     {
-        simple_key_down(key, KC_4);
+        simple_key_press(key, KC_4);
     }
 }
 
@@ -157,7 +157,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     },
 };
 
-static void hadron_key_down(uint16_t key)
+static void hadron_key_press(uint16_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
 
@@ -168,13 +168,13 @@ static void hadron_key_down(uint16_t key)
     }
     else if (*key_info != KC_NO)
     {
-        simple_key_down(key, *key_info);
+        simple_key_press(key, *key_info);
     }
 }
 
-static void hadron_key_up(uint16_t key)
+static void hadron_key_release(uint16_t key)
 {
-    intptr_t *key_info = &keyup_info[key];
+    intptr_t *key_info = &key_release_info[key];
 
     if (*key_info > 255)
     {
@@ -209,11 +209,11 @@ bool user_action_exec(keyevent_t event)
         clean_tmp_keycodes();
         if (event.pressed)
         {
-            hadron_key_down(key);
+            hadron_key_press(key);
         }
         else
         {
-            hadron_key_up(key);
+            hadron_key_release(key);
         }
     }
     else
