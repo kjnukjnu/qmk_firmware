@@ -2,6 +2,8 @@
 #include "version.h"
 #include "keymap_finnish.h"
 
+// TODO: better sectioning with comments
+
 const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS]; // required by quantum, not used by us
 
 #define KEY_COUNT (MATRIX_ROWS * MATRIX_COLS)
@@ -133,6 +135,7 @@ static void tmp_keycode(dir_keycode_t dir_code)
 
 static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
 {
+    // TODO: don't remove existing modifiers?
     mod_bits_t remove = modifiers & ~mod_bits;
     mod_bits_t add = mod_bits & ~modifiers;
     tmp_keycode(release_keycode(code));
@@ -168,6 +171,7 @@ static void k_navigation_layer_on(key_t key)
 
 static void k_four_dollar(key_t key)
 {
+    // TODO: make RALT + 4 produce ¤ (just for fun)
     if ((modifiers & (MOD_BIT_LSHIFT | MOD_BIT_RSHIFT)) &&
         !(modifiers & (MOD_BIT_LCTRL | MOD_BIT_LALT | MOD_BIT_LGUI | MOD_BIT_RCTRL | MOD_BIT_RALT | MOD_BIT_RGUI)))
     {
@@ -191,6 +195,10 @@ static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_
 static void k_prev_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);}
 static void k_next_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);}
 
+// TODO: tilde: if right modifiers, send the necessary keys
+
+// TODO: tapping support: add function to receive all events until it requires removal
+
 static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
     {
@@ -204,7 +212,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, KC_NO /* FI_ADIA */, KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
@@ -213,13 +221,13 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_BTN2, KC_MS_U, KC_BTN1, KC_NO, KC_F12,
 
-        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_NO /*ctrl alt*/, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
+        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_NO /*ctrl alt, unnecessary?*/, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
 
         KC_LSFT, KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KC_RSFT,
 
-        KC_NO /* MAC */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /*layer*/, KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
+        KC_NO /* MAC: unnecessary? */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /*layer*/, KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, KC_NO /* FI_ADIA */, KC_BSPC, KC_NO,
     },
 };
 
@@ -272,6 +280,11 @@ bool user_action_exec(keyevent_t event)
     if (event.type == KEY_EVENT)
     {
         uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
+        /* TODO: allow removal of ordinary keys that are not part of the
+         * temporary keys without cleaning the tmp_keycodes. This makes the
+         * sequence SHIFT/5/4/-5 stay in a state where the autorepeat of $
+         * works. */
+        // TODO: feed requested all-event functions
         clean_tmp_keycodes();
         if (event.pressed)
         {
@@ -284,7 +297,7 @@ bool user_action_exec(keyevent_t event)
     }
     else
     {
-        // TODO
+        // TODO: feed requested all-event functions
     }
     return true;
 }
