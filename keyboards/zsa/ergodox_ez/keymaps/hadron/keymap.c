@@ -2,6 +2,8 @@
 #include "version.h"
 #include "keymap_finnish.h"
 
+// TODO: better name than hadron
+
 // TODO: better sectioning with comments
 
 const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS]; // required by quantum, not used by us
@@ -16,8 +18,8 @@ enum layers {
 static unsigned layer = 0;
 
 typedef uint8_t key_t; // physical switch on the keyboard
+// TODO: maybe combinge keycode_t and dir_keycode_t
 typedef uint8_t keycode_t; // HID keycode reported via USB
-typedef int dir_key_t; // physical switch on the keyboard, negative == release
 typedef int dir_keycode_t; // HID keycode: negative == release
 
 typedef void (*key_func_t)(key_t key);
@@ -195,9 +197,28 @@ static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_
 static void k_prev_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);}
 static void k_next_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);}
 
-// TODO: tilde: if right modifiers, send the necessary keys
+static void k_tilde(key_t key)
+{
+  if (keycode_active(KC_RALT) ||
+      keycode_active(FI_DIAE) ||
+      keycode_active(KC_SPC))
+    {
+      return;
+    }
+  // TODO: maybe make a macro to send list of keycodes?
+  keycode_send(KC_RALT);
+  keycode_send(FI_DIAE);
+  keycode_send(release_keycode(FI_DIAE));
+  keycode_send(release_keycode(KC_RALT));
+  keycode_send(KC_SPC);
+  keycode_send(release_keycode(KC_SPC));
+}
 
 // TODO: tapping support: add function to receive all events until it requires removal
+
+// TODO: mechanical caps lock: keep LSHIFT down.
+//  short time both shifts won't change the status
+//  when caps lock is on, should shift keys revert the status momentarily?
 
 static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
@@ -208,7 +229,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KC_RCTL /* ctrl/ä (FI_ADIA)) */,
 
-        KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, KCFUNC(k_backslash), KC_NO /* tilde: RALT + FI_DIAE + KC_SPACE - KC_SPACE */, KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KC_RSFT,
+        KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, KCFUNC(k_backslash), KCFUNC(k_tilde), KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KC_RSFT,
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
@@ -221,7 +242,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_BTN2, KC_MS_U, KC_BTN1, KC_NO, KC_F12,
 
-        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_NO /*ctrl alt, unnecessary?*/, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
+        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_NO /*browser forward (KC_WFWD)*/, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
 
         KC_LSFT, KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KC_RSFT,
 
