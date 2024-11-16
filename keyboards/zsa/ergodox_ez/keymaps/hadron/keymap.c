@@ -137,17 +137,8 @@ static void tmp_keycode(dir_keycode_t dir_code)
 
 static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
 {
-    // TODO: don't remove existing modifiers?
-    mod_bits_t remove = modifiers & ~mod_bits;
     mod_bits_t add = mod_bits & ~modifiers;
     tmp_keycode(release_keycode(code));
-    for (int ix = 0; remove; ++ix, remove >>= 1)
-    {
-        if (remove & 1)
-        {
-            tmp_keycode(release_keycode(modbit_keycode(ix)));
-        }
-    }
     for (int ix = 0; add; ++ix, add >>= 1)
     {
         if (add & 1)
