@@ -168,6 +168,8 @@ static void k_four_dollar(key_t key)
     if ((modifiers & (MOD_BIT_LSHIFT | MOD_BIT_RSHIFT)) &&
         !(modifiers & (MOD_BIT_LCTRL | MOD_BIT_LALT | MOD_BIT_LGUI | MOD_BIT_RCTRL | MOD_BIT_RALT | MOD_BIT_RGUI)))
     {
+        tmp_keycode(release_keycode(KC_LSFT));
+        tmp_keycode(release_keycode(KC_RSFT));
         tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_4);
     }
     else
