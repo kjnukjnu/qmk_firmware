@@ -17,10 +17,11 @@ enum layers {
 
 static unsigned layer = 0;
 
-typedef uint8_t key_t; // physical switch on the keyboard
-// TODO: maybe combine keycode_t and dir_keycode_t
-typedef uint8_t keycode_t; // HID keycode reported via USB
-typedef int dir_keycode_t; // HID keycode: negative == release
+// physical switch on the keyboard
+typedef uint8_t key_t;
+
+// HID keycode reported via USB: negative == release
+typedef int keycode_t; // HID keycode reported via USB
 
 typedef void (*key_func_t)(key_t key);
 #define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
@@ -35,7 +36,7 @@ static const keycode_t PROGMEM modbit_keycodes[] =
 { KC_LCTL, KC_LSFT, KC_LALT, KC_LGUI, KC_RCTL, KC_RSFT, KC_RALT, KC_RGUI };
 
 #define MAX_TMP_KEYCODES 10
-static dir_keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
+static keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
 static int tmp_keycode_count;
 
 static mod_bits_t keycode_modbit(keycode_t code)
@@ -73,31 +74,27 @@ static bool keycode_active(keycode_t code)
     return keycode_active_status[code];
 }
 
-static dir_keycode_t release_keycode(keycode_t code)
+static keycode_t keycode_plain(keycode_t code)
 {
-    return -(dir_keycode_t)code;
+    return code < 0 ? -code : code;
 }
 
-static keycode_t keycode_plain(dir_keycode_t dir_code)
+static bool keycode_is_press(keycode_t code)
 {
-    return dir_code < 0 ? -dir_code : dir_code;
+    return code >= 0;
 }
 
-static bool keycode_is_press(dir_keycode_t dir_code)
+static void keycode_send(keycode_t code)
 {
-    return dir_code >= 0;
-}
-
-static void keycode_send(dir_keycode_t dir_code)
-{
-    keycode_t code = keycode_plain(dir_code);
+    bool press = keycode_is_press(code);
+    code = keycode_plain(code);
     mod_bits_t modbit = keycode_modbit(code);
-    if (dir_code == KC_NO ||
-        keycode_active(code) == keycode_is_press(dir_code))
+    if (code == KC_NO ||
+        keycode_active(code) == keycode_is_press(code))
     {
         return;
     }
-    if (keycode_is_press(dir_code))
+    if (press)
     {
         register_code(code);
     }
@@ -105,8 +102,8 @@ static void keycode_send(dir_keycode_t dir_code)
     {
         unregister_code(code);
     }
-    keycode_active_status[code] = keycode_is_press(dir_code);
-    if (keycode_is_press(dir_code))
+    keycode_active_status[code] = press;
+    if (press)
     {
         modifiers |= modbit;
     }
@@ -122,23 +119,24 @@ static void simple_key_press(key_t key, keycode_t code)
     key_release_info[key] = code;
 }
 
-static void tmp_keycode(dir_keycode_t dir_code)
+static void tmp_keycode(keycode_t code)
 {
-    keycode_t code = keycode_plain(dir_code);
-    if (dir_code == KC_NO ||
+    bool press = keycode_is_press(code);
+    code = keycode_plain(code);d
+    if (code == KC_NO ||
         tmp_keycode_count >= MAX_TMP_KEYCODES ||
-        keycode_active_status[code] == keycode_is_press(dir_code))
+        keycode_active_status[code] == press)
     {
         return;
     }
-    keycode_send(dir_code);
-    tmp_keycodes[tmp_keycode_count++] = dir_code;
+    keycode_send(code);
+    tmp_keycodes[tmp_keycode_count++] = code;
 }
 
 static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
 {
     mod_bits_t add = mod_bits & ~modifiers;
-    tmp_keycode(release_keycode(code));
+    tmp_keycode(-code);
     for (int ix = 0; add; ++ix, add >>= 1)
     {
         if (add & 1)
@@ -167,13 +165,13 @@ static void k_four_dollar(key_t key)
     if ((modifiers & (MOD_BIT_LSHIFT | MOD_BIT_RSHIFT)) &&
         !(modifiers & (MOD_BIT_LCTRL | MOD_BIT_LALT | MOD_BIT_LGUI | MOD_BIT_RCTRL | MOD_BIT_RALT | MOD_BIT_RGUI)))
     {
-        tmp_keycode(release_keycode(KC_LSFT));
-        tmp_keycode(release_keycode(KC_RSFT));
+        tmp_keycode(-KC_LSFT);
+        tmp_keycode(-KC_RSFT);
         tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_4);
     }
     else if (modifiers == MOD_BIT_RALT)
     {
-        tmp_keycode(release_keycode(KC_RALT));
+        tmp_keycode(-KC_RALT);
         tmp_keycode(KC_RSFT);
         tmp_keycode(KC_4);
     }
@@ -206,10 +204,10 @@ static void k_tilde(key_t key)
   // TODO: maybe make a macro to send list of keycodes?
   keycode_send(KC_RALT);
   keycode_send(FI_DIAE);
-  keycode_send(release_keycode(FI_DIAE));
-  keycode_send(release_keycode(KC_RALT));
+  keycode_send(-FI_DIAE);
+  keycode_send(-KC_RALT);
   keycode_send(KC_SPC);
-  keycode_send(release_keycode(KC_SPC));
+  keycode_send(-KC_SPC);
 }
 
 // TODO: tapping support: add function to receive all events until it requires removal
