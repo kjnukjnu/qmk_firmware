@@ -87,10 +87,11 @@ static bool keycode_is_press(keycode_t code)
 static void keycode_send(keycode_t code)
 {
     bool press = keycode_is_press(code);
+    mod_bits_t modbit;
+
     code = keycode_plain(code);
-    mod_bits_t modbit = keycode_modbit(code);
-    if (code == KC_NO ||
-        keycode_active(code) == keycode_is_press(code))
+    modbit = keycode_modbit(code);
+    if (code == KC_NO || keycode_active(code) == press)
     {
         return;
     }
@@ -121,16 +122,17 @@ static void simple_key_press(key_t key, keycode_t code)
 
 static void tmp_keycode(keycode_t code)
 {
+    keycode_t orig_code = code;
     bool press = keycode_is_press(code);
-    code = keycode_plain(code);d
+    code = keycode_plain(code);
     if (code == KC_NO ||
         tmp_keycode_count >= MAX_TMP_KEYCODES ||
         keycode_active_status[code] == press)
     {
         return;
     }
-    keycode_send(code);
-    tmp_keycodes[tmp_keycode_count++] = code;
+    keycode_send(orig_code);
+    tmp_keycodes[tmp_keycode_count++] = orig_code;
 }
 
 static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
