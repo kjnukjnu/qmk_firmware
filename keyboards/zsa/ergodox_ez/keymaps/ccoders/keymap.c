@@ -2,11 +2,25 @@
 #include "version.h"
 #include "keymap_finnish.h"
 
-// TODO: better name than hadron: ccoders
+/* ccoders keymap
+
+   In addition to defining the keymap, this file replaces the normal qmk event
+   processing to be able to control low level details how to interpret the key
+   events.
+
+   Here as input we receive the key down/up events plus the timer events. As
+   output we generate register_code() and unregister_code() calls and switch
+   the leds on/off. Back to basics, so to speak.
+
+   If you want to have full control how the key events are interpreted, you
+   might be interested in this. Also if your keyboard is not configured with
+   the US keyboard layout on the computer side, you might find something useful
+   with the approach here. If you want to use graphical keymap editor, and
+   avoid C coding, this isn't for you. Also this doesn't fit well to the qmk
+   structure where the keymaps are separated from the generic logic.
+*/
 
 // TODO: better sectioning with comments
-
-const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS]; // required by quantum, not used by us
 
 #define KEY_COUNT (MATRIX_ROWS * MATRIX_COLS)
 
@@ -21,7 +35,7 @@ static unsigned layer = 0;
 typedef uint8_t key_t;
 
 // HID keycode reported via USB: negative == release
-typedef int keycode_t; // HID keycode reported via USB
+typedef int keycode_t;
 
 typedef void (*key_func_t)(key_t key);
 #define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
@@ -320,3 +334,6 @@ bool user_action_exec(keyevent_t event)
     }
     return true;
 }
+
+// dummy definition required by qmk build system, not used by us
+const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS];
