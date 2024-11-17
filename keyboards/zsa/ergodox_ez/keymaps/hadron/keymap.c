@@ -2,7 +2,7 @@
 #include "version.h"
 #include "keymap_finnish.h"
 
-// TODO: better name than hadron
+// TODO: better name than hadron: ccoders
 
 // TODO: better sectioning with comments
 
@@ -18,7 +18,7 @@ enum layers {
 static unsigned layer = 0;
 
 typedef uint8_t key_t; // physical switch on the keyboard
-// TODO: maybe combinge keycode_t and dir_keycode_t
+// TODO: maybe combine keycode_t and dir_keycode_t
 typedef uint8_t keycode_t; // HID keycode reported via USB
 typedef int dir_keycode_t; // HID keycode: negative == release
 
@@ -231,7 +231,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, KC_NO /* FI_ADIA */, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
@@ -240,13 +240,13 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_BTN2, KC_MS_U, KC_BTN1, KC_NO, KC_F12,
 
-        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_NO /*browser forward (KC_WFWD)*/, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
+        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_WFWD, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
 
         KC_LSFT, KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KC_RSFT,
 
         KC_NO /* MAC: unnecessary? */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /*layer*/, KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, KC_NO /* FI_ADIA */, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
 };
 
