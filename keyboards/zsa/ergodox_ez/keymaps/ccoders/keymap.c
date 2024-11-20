@@ -149,6 +149,23 @@ static void tmp_keycode(keycode_t code)
     tmp_keycodes[tmp_keycode_count++] = orig_code;
 }
 
+#define _CALL_FUNC_1(func, a) func(a)
+#define _CALL_FUNC_2(func, a, b) func(a); func(b)
+#define _CALL_FUNC_3(func, a, b, c) func(a); func(b); func(c)
+#define _CALL_FUNC_4(func, a, b, c, d) func(a); func(b); func(c); func(d)
+#define _CALL_FUNC_5(func, a, b, c, d, e) func(a); func(b); func(c); func(d); func(e)
+#define _CALL_FUNC_6(func, a, b, c, d, e, f) func(a); func(b); func(c); func(d); func(e); func(f)
+#define _CALL_FUNC_7(func, a, b, c, d, e, f, g) func(a); func(b); func(c); func(d); func(e); func(f); func(g)
+#define _CALL_FUNC_8(func, a, b, c, d, e, f, g, h) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h)
+#define _CALL_FUNC_9(func, a, b, c, d, e, f, g, h, i) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h); func(i)
+#define _CALL_FUNC_10(func, a, b, c, d, e, f, g, h, i, j) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h); func(i); func(j)
+
+#define GET_CALL_FUNC_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, name, ...) name
+#define CALL_FUNC(func, ...) GET_CALL_FUNC_MACRO(__VA_ARGS__, _CALL_FUNC_10, _CALL_FUNC_9, _CALL_FUNC_8, _CALL_FUNC_7, _CALL_FUNC_6, _CALL_FUNC_5, _CALL_FUNC_4, _CALL_FUNC_3, _CALL_FUNC_2, _CALL_FUNC_1)(func, __VA_ARGS__)
+
+#define keycode_send(...) CALL_FUNC(keycode_send, __VA_ARGS__)
+#define tmp_keycode(...) CALL_FUNC(tmp_keycode, __VA_ARGS__)
+
 static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
 {
     mod_bits_t add = mod_bits & ~modifiers;
@@ -181,15 +198,12 @@ static void k_four_dollar(key_t key)
     if ((modifiers & (MOD_BIT_LSHIFT | MOD_BIT_RSHIFT)) &&
         !(modifiers & (MOD_BIT_LCTRL | MOD_BIT_LALT | MOD_BIT_LGUI | MOD_BIT_RCTRL | MOD_BIT_RALT | MOD_BIT_RGUI)))
     {
-        tmp_keycode(-KC_LSFT);
-        tmp_keycode(-KC_RSFT);
+        tmp_keycode(-KC_LSFT, -KC_RSFT);
         tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_4);
     }
     else if (modifiers == MOD_BIT_RALT)
     {
-        tmp_keycode(-KC_RALT);
-        tmp_keycode(KC_RSFT);
-        tmp_keycode(KC_4);
+        tmp_keycode(-KC_RALT, KC_RSFT, KC_4);
     }
     else
     {
@@ -217,13 +231,7 @@ static void k_tilde(key_t key)
     {
       return;
     }
-  // TODO: maybe make a macro to send list of keycodes?
-  keycode_send(KC_RALT);
-  keycode_send(FI_DIAE);
-  keycode_send(-FI_DIAE);
-  keycode_send(-KC_RALT);
-  keycode_send(KC_SPC);
-  keycode_send(-KC_SPC);
+  keycode_send(KC_RALT, FI_DIAE, -FI_DIAE, -KC_RALT, KC_SPC, -KC_SPC);
 }
 
 // TODO: tapping support: add function to receive all events until it requires removal
