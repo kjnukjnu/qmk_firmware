@@ -272,7 +272,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     },
 };
 
-static void hadron_key_press(uint16_t key)
+static void key_press(uint16_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
 
@@ -287,7 +287,7 @@ static void hadron_key_press(uint16_t key)
     }
 }
 
-static void hadron_key_release(uint16_t key)
+static void key_release(uint16_t key)
 {
     intptr_t *key_info = &key_release_info[key];
 
@@ -329,11 +329,11 @@ bool user_action_exec(keyevent_t event)
         clean_tmp_keycodes();
         if (event.pressed)
         {
-            hadron_key_press(key);
+            key_press(key);
         }
         else
         {
-            hadron_key_release(key);
+            key_release(key);
         }
     }
     else
