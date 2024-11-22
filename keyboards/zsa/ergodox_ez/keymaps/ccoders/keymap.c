@@ -33,6 +33,7 @@ static unsigned layer = 0;
 
 // physical switch on the keyboard
 typedef uint8_t key_t;
+#define KEY_NO 255
 
 // HID keycode reported via USB: negative == release
 typedef int keycode_t;
@@ -180,6 +181,42 @@ static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
     tmp_keycode(code);
 }
 
+typedef bool (*tmp_handler_t)(key_t, bool);
+
+#define MAX_TMP_HANDLERS 10
+static tmp_handler_t tmp_handlers[MAX_TMP_HANDLERS];
+static int tmp_handler_cnt;
+
+static void add_tmp_handler(tmp_handler_t func)
+{
+    if (tmp_handler_cnt < MAX_TMP_HANDLERS)
+    {
+        tmp_handlers[tmp_handler_cnt++] = func;
+    }
+}
+
+static void remove_tmp_handler(tmp_handler_t func)
+{
+    int i;
+
+    if (tmp_handler_cnt == 0)
+    {
+        return;
+    }
+    for (i = 0; i < tmp_handler_cnt && tmp_handlers[i] != func; ++i)
+    {
+    }
+    if (i < tmp_handler_cnt)
+    {
+        for (; i < tmp_handler_cnt - 1; ++i)
+        {
+            tmp_handlers[i] = tmp_handlers[i + 1];
+        }
+        tmp_handlers[i] = NULL;
+    }
+    --tmp_handler_cnt;
+}
+
 static void k_navigation_layer_off(key_t key)
 {
     ergodox_right_led_3_off();
@@ -192,6 +229,39 @@ static void k_navigation_layer_on(key_t key)
     layer = NAVIGATION;
     key_release_info[key] = KCFUNC(k_navigation_layer_off);
 }
+
+static int shift_count;
+
+static bool shift_handler(key_t key, bool pressed)
+{
+    return false;
+}
+
+static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
+{
+    keycode_send(kc);
+    key_release_info[key] = KCFUNC(up_func);
+    if (!shift_count++)
+    {
+        ergodox_right_led_2_set(50);
+        add_tmp_handler(shift_handler);
+    }
+}
+
+static void shift_up(keycode_t code)
+{
+    keycode_send(-code);
+    if (!--shift_count)
+    {
+        ergodox_right_led_2_off();
+        remove_tmp_handler(shift_handler);
+    }
+}
+
+static void k_lsft_release(key_t key) {shift_up(KC_LSFT);}
+static void k_rsft_release(key_t key) {shift_up(KC_RSFT);}
+static void k_lsft(key_t key) {shift_down(key, KC_LSFT, k_lsft_release);}
+static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 
 static void k_four_dollar(key_t key)
 {
@@ -249,7 +319,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KC_RCTL /* ctrl/ä (FI_ADIA)) */,
 
-        KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, KCFUNC(k_backslash), KCFUNC(k_tilde), KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KC_RSFT,
+        KCFUNC(k_lsft), KC_Z, KC_X, KC_C, KC_V, KC_B, KCFUNC(k_backslash), KCFUNC(k_tilde), KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KCFUNC(k_rsft),
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
@@ -264,7 +334,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_WFWD, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
 
-        KC_LSFT, KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KC_RSFT,
+        KCFUNC(k_lsft), KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KCFUNC(k_rsft),
 
         KC_NO /* MAC: unnecessary? */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /*layer*/, KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
 
@@ -272,7 +342,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     },
 };
 
-static void key_press(uint16_t key)
+static void key_press(key_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
 
@@ -287,7 +357,7 @@ static void key_press(uint16_t key)
     }
 }
 
-static void key_release(uint16_t key)
+static void key_release(key_t key)
 {
     intptr_t *key_info = &key_release_info[key];
 
@@ -311,6 +381,16 @@ static void clean_tmp_keycodes(void)
     }
 }
 
+static bool call_tmp_handlers(key_t key, bool pressed)
+{
+    bool ret = false;
+    for (int i = 0; i < tmp_handler_cnt; ++i)
+    {
+        ret = ret || tmp_handlers[i](key, pressed);
+    }
+    return ret;
+}
+
 // this function bypasses the qmk state machine
 bool user_action_exec(keyevent_t event)
 {
@@ -325,20 +405,22 @@ bool user_action_exec(keyevent_t event)
          * temporary keys without cleaning the tmp_keycodes. This makes the
          * sequence SHIFT/5/4/-5 stay in a state where the autorepeat of $
          * works. */
-        // TODO: feed requested all-event functions
         clean_tmp_keycodes();
-        if (event.pressed)
+        if (!call_tmp_handlers(key, event.pressed))
         {
-            key_press(key);
-        }
-        else
-        {
-            key_release(key);
+            if (event.pressed)
+            {
+                key_press(key);
+            }
+            else
+            {
+                key_release(key);
+            }
         }
     }
     else
     {
-        // TODO: feed requested all-event functions
+        (void)call_tmp_handlers(KEY_NO, false);
     }
     return true;
 }
