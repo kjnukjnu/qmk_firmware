@@ -2,6 +2,8 @@
 #include "version.h"
 #include "keymap_finnish.h"
 
+// TODO: build in docker container
+
 /* ccoders keymap
 
    In addition to defining the keymap, this file replaces the normal qmk event
@@ -225,15 +227,34 @@ static void k_navigation_layer_off(key_t key)
 
 static void k_navigation_layer_on(key_t key)
 {
-    ergodox_right_led_3_on();
+    ergodox_right_led_3_set(128);
     layer = NAVIGATION;
     key_release_info[key] = KCFUNC(k_navigation_layer_off);
 }
 
 static int shift_count;
+static uint16_t last_change;
+static bool led_state;
 
 static bool shift_handler(key_t key, bool pressed)
 {
+// TODO: mechanical caps lock
+//  short time both shifts won't change the status
+//  when caps lock is on, should shift keys revert the status momentarily?
+    static const uint16_t interval = 1000;
+    uint16_t now;
+
+    if (key != KEY_NO)
+    {
+        return false;
+    }
+    now = timer_read(); // ms
+    if ((uint16_t)(now - last_change) >= interval)
+    {
+        led_state = !led_state;
+        last_change += interval;
+        ergodox_right_led_2_set(led_state ? 50 : 0);
+    }
     return false;
 }
 
@@ -244,6 +265,8 @@ static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
     if (!shift_count++)
     {
         ergodox_right_led_2_set(50);
+        led_state = true;
+        last_change = timer_read();
         add_tmp_handler(shift_handler);
     }
 }
@@ -305,10 +328,6 @@ static void k_tilde(key_t key)
 }
 
 // TODO: tapping support: add function to receive all events until it requires removal
-
-// TODO: mechanical caps lock: keep LSHIFT down.
-//  short time both shifts won't change the status
-//  when caps lock is on, should shift keys revert the status momentarily?
 
 static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
