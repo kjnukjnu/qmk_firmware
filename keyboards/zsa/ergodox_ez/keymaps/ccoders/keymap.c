@@ -296,9 +296,7 @@ static void k_rsft(key_t key);
 
 static bool shift_key_handler(key_t key, bool pressed)
 {
-// TODO: mechanical caps lock
-//  short time both shifts won't change the status
-//  when caps lock is on, should shift keys revert the status momentarily?
+//  todo: when caps lock is on, should shift keys revert the status momentarily?
     if (key != KEY_NO &&
         keymap[shift_layer][key] != KCFUNC(k_lsft) &&
         keymap[shift_layer][key] != KCFUNC(k_rsft))
@@ -324,13 +322,16 @@ static void shift_finish(void)
     {
         shift_lock = !shift_lock;
         ergodox_right_led_1_set(shift_lock ? 255 : 0);
+        if (!shift_lock)
+        {
+            keycode_send(-KC_LSFT, -KC_RSFT);
+        }
     }
     remove_tmp_handler(shift_key_handler);
 }
 
 static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
 {
-    keycode_send(kc);
     key_release_info[key] = KCFUNC(up_func);
     if (!shift_count++)
     {
@@ -340,14 +341,18 @@ static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
     {
         shift_second_seen = true;
     }
+    keycode_send(kc);
 }
 
 static void shift_up(keycode_t code)
 {
-    keycode_send(-code);
     if (!--shift_count)
     {
         shift_finish();
+    }
+    if (!shift_lock)
+    {
+        keycode_send(-code);
     }
 }
 
