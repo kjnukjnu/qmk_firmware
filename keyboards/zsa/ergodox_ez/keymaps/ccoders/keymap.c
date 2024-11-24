@@ -373,7 +373,7 @@ static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
    hold: momentary NAGIVATION layer
  */
 
-/* TODO: KC_RCTL/FI_ADIA support
+/* KC_RCTL/FI_ADIA support
 
    BASE layer:
      tap: FI_ADIA
@@ -395,13 +395,13 @@ struct tap_state
     enum { s1, s2, s3 } state;
 };
 
-static void tap_init(struct tap_state *state,
-                     key_t key,
-                     keycode_t tap,
-                     keycode_t hold,
-                     uint16_t t1,
-                     uint16_t t2,
-                     tmp_handler_t handler)
+static void tap_start(struct tap_state *state,
+                      key_t key,
+                      keycode_t tap,
+                      keycode_t hold,
+                      uint16_t t1,
+                      uint16_t t2,
+                      tmp_handler_t handler)
 {
     state->handler = handler;
     state->start = timer_read();
@@ -431,7 +431,7 @@ static bool tap_event_s1(struct tap_state *state, key_t key, bool pressed)
         state->state = s3;
         state->mystery_key = key;
         state->start = timer_read();
-        return false;
+        return true;
     }
     if (key == KEY_NO)
     {
@@ -518,19 +518,14 @@ static bool rctl_adia_handler(key_t key, bool pressed)
     return tap_event(&rctl_adia_state, key, pressed);
 }
 
-static void rctl_adia_start(key_t key)
-{
-    tap_init(&rctl_adia_state, key, FI_ADIA, KC_RCTL, 100, 100, rctl_adia_handler);
-}
-
 static void k_rctl_adia(key_t key)
 {
-    if (layer == BASE)
+    if (layer != BASE)
     {
         simple_key_press(key, KC_RCTL);
         return;
     }
-    rctl_adia_start(key);
+    tap_start(&rctl_adia_state, key, FI_ADIA, KC_RCTL, 500, 50, rctl_adia_handler);
 }
 
 /* The keymap */
