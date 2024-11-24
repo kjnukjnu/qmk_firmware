@@ -284,12 +284,15 @@ static void k_four_dollar(key_t key)
 
 /* Mechanical shift lock */
 
-static bool shift_lock;
-static bool shift_second_seen;
-static bool shift_other_seen;
-static uint8_t shift_layer;
-static uint8_t shift_count;
-static uint16_t shift_start_time;
+static struct shift_state
+{
+    bool lock;
+    bool second_seen;
+    bool other_seen;
+    uint8_t layer;
+    uint8_t count;
+    uint16_t start_time;
+} shift_state;
 
 static void k_lsft(key_t key);
 static void k_rsft(key_t key);
@@ -298,31 +301,31 @@ static bool shift_key_handler(key_t key, bool pressed)
 {
 //  todo: when caps lock is on, should shift keys revert the status momentarily?
     if (key != KEY_NO &&
-        keymap[shift_layer][key] != KCFUNC(k_lsft) &&
-        keymap[shift_layer][key] != KCFUNC(k_rsft))
+        keymap[shift_state.layer][key] != KCFUNC(k_lsft) &&
+        keymap[shift_state.layer][key] != KCFUNC(k_rsft))
     {
-        shift_other_seen = true;
+        shift_state.other_seen = true;
     }
     return false;
 }
 
 static void shift_start(void)
 {
-    shift_second_seen = false;
-    shift_other_seen = false;
-    shift_layer = layer;
-    shift_start_time = timer_read();
+    shift_state.second_seen = false;
+    shift_state.other_seen = false;
+    shift_state.layer = layer;
+    shift_state.start_time = timer_read();
     add_tmp_handler(shift_key_handler);
 }
 
 static void shift_finish(void)
 {
-    if (!shift_other_seen && shift_second_seen &&
-        (unsigned)timer_read() - (unsigned)shift_start_time < 500)
+    if (!shift_state.other_seen && shift_state.second_seen &&
+        (unsigned)timer_read() - (unsigned)shift_state.start_time < 500)
     {
-        shift_lock = !shift_lock;
-        ergodox_right_led_1_set(shift_lock ? 255 : 0);
-        if (!shift_lock)
+        shift_state.lock = !shift_state.lock;
+        ergodox_right_led_1_set(shift_state.lock ? 255 : 0);
+        if (!shift_state.lock)
         {
             keycode_send(-KC_LSFT, -KC_RSFT);
         }
@@ -333,24 +336,24 @@ static void shift_finish(void)
 static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
 {
     key_release_info[key] = KCFUNC(up_func);
-    if (!shift_count++)
+    if (!shift_state.count++)
     {
         shift_start();
     }
     else
     {
-        shift_second_seen = true;
+        shift_state.second_seen = true;
     }
     keycode_send(kc);
 }
 
 static void shift_up(keycode_t code)
 {
-    if (!--shift_count)
+    if (!--shift_state.count)
     {
         shift_finish();
     }
-    if (!shift_lock)
+    if (!shift_state.lock)
     {
         keycode_send(-code);
     }
