@@ -219,6 +219,22 @@ static void remove_tmp_handler(tmp_handler_t func)
     --tmp_handler_cnt;
 }
 
+/* Key functions for the cases simple keycode mapping is not enough */
+
+static void k_brace_left(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_7);}
+static void k_brace_right(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_0);}
+static void k_backslash(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_PLUS);}
+static void k_pipe(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_LABK);}
+static void k_greater_than(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LSHIFT, FI_LABK);}
+static void k_lbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_8);}
+static void k_rbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_9);}
+static void k_ad(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_2);}
+static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_DIAE);}
+static void k_prev_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);}
+static void k_next_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);}
+
+/* Change layer while layer key is held down */
+
 static void k_navigation_layer_off(key_t key)
 {
     ergodox_right_led_3_off();
@@ -231,6 +247,41 @@ static void k_navigation_layer_on(key_t key)
     layer = NAVIGATION;
     key_release_info[key] = KCFUNC(k_navigation_layer_off);
 }
+
+/* Tilde on FI keyboard: dead tilde plus space */
+
+static void k_tilde(key_t key)
+{
+  if (keycode_active(KC_RALT) ||
+      keycode_active(FI_DIAE) ||
+      keycode_active(KC_SPC))
+    {
+      return;
+    }
+  keycode_send(KC_RALT, FI_DIAE, -FI_DIAE, -KC_RALT, KC_SPC, -KC_SPC);
+}
+
+/* Special handling for shift-4 to produce $ on FI keyboard */
+
+static void k_four_dollar(key_t key)
+{
+    if ((modifiers & (MOD_BIT_LSHIFT | MOD_BIT_RSHIFT)) &&
+        !(modifiers & (MOD_BIT_LCTRL | MOD_BIT_LALT | MOD_BIT_LGUI | MOD_BIT_RCTRL | MOD_BIT_RALT | MOD_BIT_RGUI)))
+    {
+        tmp_keycode(-KC_LSFT, -KC_RSFT);
+        tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_4);
+    }
+    else if (modifiers == MOD_BIT_RALT)
+    {
+        tmp_keycode(-KC_RALT, KC_RSFT, KC_4);
+    }
+    else
+    {
+        simple_key_press(key, KC_4);
+    }
+}
+
+/* Mechanical shift lock */
 
 static int shift_count;
 static uint16_t last_change;
@@ -286,48 +337,9 @@ static void k_rsft_release(key_t key) {shift_up(KC_RSFT);}
 static void k_lsft(key_t key) {shift_down(key, KC_LSFT, k_lsft_release);}
 static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 
-static void k_four_dollar(key_t key)
-{
-    if ((modifiers & (MOD_BIT_LSHIFT | MOD_BIT_RSHIFT)) &&
-        !(modifiers & (MOD_BIT_LCTRL | MOD_BIT_LALT | MOD_BIT_LGUI | MOD_BIT_RCTRL | MOD_BIT_RALT | MOD_BIT_RGUI)))
-    {
-        tmp_keycode(-KC_LSFT, -KC_RSFT);
-        tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_4);
-    }
-    else if (modifiers == MOD_BIT_RALT)
-    {
-        tmp_keycode(-KC_RALT, KC_RSFT, KC_4);
-    }
-    else
-    {
-        simple_key_press(key, KC_4);
-    }
-}
-
-static void k_brace_left(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_7);}
-static void k_brace_right(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_0);}
-static void k_backslash(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_PLUS);}
-static void k_pipe(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_LABK);}
-static void k_greater_than(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LSHIFT, FI_LABK);}
-static void k_lbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_8);}
-static void k_rbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_9);}
-static void k_ad(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_2);}
-static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_DIAE);}
-static void k_prev_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);}
-static void k_next_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);}
-
-static void k_tilde(key_t key)
-{
-  if (keycode_active(KC_RALT) ||
-      keycode_active(FI_DIAE) ||
-      keycode_active(KC_SPC))
-    {
-      return;
-    }
-  keycode_send(KC_RALT, FI_DIAE, -FI_DIAE, -KC_RALT, KC_SPC, -KC_SPC);
-}
-
 // TODO: tapping support: add function to receive all events until it requires removal
+
+/* The keymap */
 
 static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
