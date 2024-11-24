@@ -22,40 +22,49 @@
    structure where the keymaps are separated from the generic logic.
 */
 
-// TODO: better sectioning with comments
+/* Physical switch on the keyboard. */
 
-#define KEY_COUNT (MATRIX_ROWS * MATRIX_COLS)
-
-enum layers {
-    BASE,
-    NAVIGATION
-};
-
-static unsigned layer = 0;
-static const intptr_t PROGMEM keymap[][KEY_COUNT];
-
-// physical switch on the keyboard
 typedef uint8_t key_t;
 #define KEY_NO 255
+#define KEY_COUNT (MATRIX_ROWS * MATRIX_COLS)
 
-// HID keycode reported via USB: negative == release
+/* HID keycode reported via USB: negative == release. */
+
 typedef int keycode_t;
 
-typedef void (*key_func_t)(key_t key);
-#define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
+static keycode_t keycode_plain(keycode_t code)
+{
+    return code < 0 ? -code : code;
+}
 
-static intptr_t key_release_info[KEY_COUNT];
+static bool keycode_is_press(keycode_t code)
+{
+    return code >= 0;
+}
 
-static bool keycode_active_status[255];
-typedef uint8_t mod_bits_t;
-static mod_bits_t modifiers;
+/* Macros to call a function for each of the arguments. */
+
+#define _CALL_FUNC_1(func, a) func(a)
+#define _CALL_FUNC_2(func, a, b) func(a); func(b)
+#define _CALL_FUNC_3(func, a, b, c) func(a); func(b); func(c)
+#define _CALL_FUNC_4(func, a, b, c, d) func(a); func(b); func(c); func(d)
+#define _CALL_FUNC_5(func, a, b, c, d, e) func(a); func(b); func(c); func(d); func(e)
+#define _CALL_FUNC_6(func, a, b, c, d, e, f) func(a); func(b); func(c); func(d); func(e); func(f)
+#define _CALL_FUNC_7(func, a, b, c, d, e, f, g) func(a); func(b); func(c); func(d); func(e); func(f); func(g)
+#define _CALL_FUNC_8(func, a, b, c, d, e, f, g, h) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h)
+#define _CALL_FUNC_9(func, a, b, c, d, e, f, g, h, i) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h); func(i)
+#define _CALL_FUNC_10(func, a, b, c, d, e, f, g, h, i, j) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h); func(i); func(j)
+
+#define GET_CALL_FUNC_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, name, ...) name
+#define CALL_FUNC(func, ...) GET_CALL_FUNC_MACRO(__VA_ARGS__, _CALL_FUNC_10, _CALL_FUNC_9, _CALL_FUNC_8, _CALL_FUNC_7, _CALL_FUNC_6, _CALL_FUNC_5, _CALL_FUNC_4, _CALL_FUNC_3, _CALL_FUNC_2, _CALL_FUNC_1)(func, __VA_ARGS__)
+
+/* Modifiers and keycodes */
+
+typedef uint8_t mod_bits_t; // modifier bitmap type
+static mod_bits_t modifiers; // current modifiers
 
 static const keycode_t PROGMEM modbit_keycodes[] =
 { KC_LCTL, KC_LSFT, KC_LALT, KC_LGUI, KC_RCTL, KC_RSFT, KC_RALT, KC_RGUI };
-
-#define MAX_TMP_KEYCODES 10
-static keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
-static int tmp_keycode_count;
 
 static mod_bits_t keycode_modbit(keycode_t code)
 {
@@ -87,19 +96,14 @@ static keycode_t modbit_keycode(int bit_number)
     return modbit_keycodes[bit_number];
 }
 
+/* Current keyboard status */
+
+static intptr_t key_release_info[KEY_COUNT]; // what to do on key release
+static bool keycode_active_status[255]; // what keycodes are currently reported
+
 static bool keycode_active(keycode_t code)
 {
     return keycode_active_status[code];
-}
-
-static keycode_t keycode_plain(keycode_t code)
-{
-    return code < 0 ? -code : code;
-}
-
-static bool keycode_is_press(keycode_t code)
-{
-    return code >= 0;
 }
 
 static void keycode_send(keycode_t code)
@@ -132,11 +136,19 @@ static void keycode_send(keycode_t code)
     }
 }
 
+#define keycode_send(...) CALL_FUNC(keycode_send, __VA_ARGS__)
+
 static void simple_key_press(key_t key, keycode_t code)
 {
     keycode_send(code);
     key_release_info[key] = code;
 }
+
+/* Temporary keycodes to be reverted on the next key event */
+
+#define MAX_TMP_KEYCODES 10
+static keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
+static int tmp_keycode_count;
 
 static void tmp_keycode(keycode_t code)
 {
@@ -153,21 +165,6 @@ static void tmp_keycode(keycode_t code)
     tmp_keycodes[tmp_keycode_count++] = orig_code;
 }
 
-#define _CALL_FUNC_1(func, a) func(a)
-#define _CALL_FUNC_2(func, a, b) func(a); func(b)
-#define _CALL_FUNC_3(func, a, b, c) func(a); func(b); func(c)
-#define _CALL_FUNC_4(func, a, b, c, d) func(a); func(b); func(c); func(d)
-#define _CALL_FUNC_5(func, a, b, c, d, e) func(a); func(b); func(c); func(d); func(e)
-#define _CALL_FUNC_6(func, a, b, c, d, e, f) func(a); func(b); func(c); func(d); func(e); func(f)
-#define _CALL_FUNC_7(func, a, b, c, d, e, f, g) func(a); func(b); func(c); func(d); func(e); func(f); func(g)
-#define _CALL_FUNC_8(func, a, b, c, d, e, f, g, h) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h)
-#define _CALL_FUNC_9(func, a, b, c, d, e, f, g, h, i) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h); func(i)
-#define _CALL_FUNC_10(func, a, b, c, d, e, f, g, h, i, j) func(a); func(b); func(c); func(d); func(e); func(f); func(g); func(h); func(i); func(j)
-
-#define GET_CALL_FUNC_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, name, ...) name
-#define CALL_FUNC(func, ...) GET_CALL_FUNC_MACRO(__VA_ARGS__, _CALL_FUNC_10, _CALL_FUNC_9, _CALL_FUNC_8, _CALL_FUNC_7, _CALL_FUNC_6, _CALL_FUNC_5, _CALL_FUNC_4, _CALL_FUNC_3, _CALL_FUNC_2, _CALL_FUNC_1)(func, __VA_ARGS__)
-
-#define keycode_send(...) CALL_FUNC(keycode_send, __VA_ARGS__)
 #define tmp_keycode(...) CALL_FUNC(tmp_keycode, __VA_ARGS__)
 
 static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
@@ -184,8 +181,7 @@ static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
     tmp_keycode(code);
 }
 
-static void key_press(key_t key);
-static void key_release(key_t key);
+/* Temporary additional handlers to support complex key functions */
 
 typedef bool (*tmp_handler_t)(key_t, bool);
 
@@ -225,6 +221,25 @@ static void remove_tmp_handler(tmp_handler_t func)
 
 /* Key functions for the cases simple keycode mapping is not enough */
 
+// layer definitions used by our keymap
+
+enum layers {
+    BASE,
+    NAVIGATION
+};
+static unsigned layer = 0;
+
+// forward declarations for key functions
+static const intptr_t PROGMEM keymap[][KEY_COUNT];
+static void key_press(key_t key);
+static void key_release(key_t key);
+
+// key function type definition and macro to use it in keymap
+typedef void (*key_func_t)(key_t key);
+#define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
+
+// the actual key functions start here
+
 static void k_brace_left(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_7);}
 static void k_brace_right(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_0);}
 static void k_backslash(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_PLUS);}
@@ -237,7 +252,7 @@ static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_
 static void k_prev_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);}
 static void k_next_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);}
 
-/* Change layer while layer key is held down */
+// change layer while layer key is held down
 
 static void k_navigation_layer_off(key_t key)
 {
@@ -252,7 +267,7 @@ static void k_navigation_layer_on(key_t key)
     key_release_info[key] = KCFUNC(k_navigation_layer_off);
 }
 
-/* Tilde on FI keyboard: dead tilde plus space */
+// tilde on FI keyboard: dead tilde plus space
 
 static void k_tilde(key_t key)
 {
@@ -265,7 +280,7 @@ static void k_tilde(key_t key)
   keycode_send(KC_RALT, FI_DIAE, -FI_DIAE, -KC_RALT, KC_SPC, -KC_SPC);
 }
 
-/* Special handling for shift-4 to produce $ on FI keyboard */
+// special handling for shift-4 to produce $ on FI keyboard
 
 static void k_four_dollar(key_t key)
 {
@@ -285,7 +300,7 @@ static void k_four_dollar(key_t key)
     }
 }
 
-/* Mechanical shift lock */
+// mechanical shift lock: kind of caps lock when tapping both shifts
 
 static struct shift_state
 {
@@ -367,20 +382,17 @@ static void k_rsft_release(key_t key) {shift_up(KC_RSFT);}
 static void k_lsft(key_t key) {shift_down(key, KC_LSFT, k_lsft_release);}
 static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 
-/* TODO: layer switch
+// TODO: layer switch
+//
+// tap: switch between BASE/NAVIGATION
+// hold: momentary NAGIVATION layer
 
-   tap: switch between BASE/NAVIGATION
-   hold: momentary NAGIVATION layer
- */
-
-/* KC_RCTL/FI_ADIA support
-
-   BASE layer:
-     tap: FI_ADIA
-     hold: KC_RCTL
-   NAVIGATION layer:
-     KC_RCTL
- */
+// KC_RCTL/FI_ADIA support
+//   BASE layer:
+//     tap: FI_ADIA
+//     hold: KC_RCTL
+//   NAVIGATION layer:
+//     KC_RCTL
 
 struct tap_state
 {
@@ -562,6 +574,8 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     },
 };
 
+/* Event handling (replaces qmk's default event handling */
+
 static void key_press(key_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
@@ -611,7 +625,8 @@ static bool call_tmp_handlers(key_t key, bool pressed)
     return ret;
 }
 
-// this function bypasses the qmk state machine
+// hook early into qmk's event handling
+
 bool user_action_exec(keyevent_t event)
 {
     if (event.type != KEY_EVENT && event.type != TICK_EVENT)
@@ -645,5 +660,6 @@ bool user_action_exec(keyevent_t event)
     return true;
 }
 
-// dummy definition required by qmk build system, not used by us
+/* Dummy definitions required by qmk build system, not used by us */
+
 const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS];
