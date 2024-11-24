@@ -32,6 +32,7 @@ enum layers {
 };
 
 static unsigned layer = 0;
+static const intptr_t PROGMEM keymap[][KEY_COUNT];
 
 // physical switch on the keyboard
 typedef uint8_t key_t;
@@ -283,30 +284,48 @@ static void k_four_dollar(key_t key)
 
 /* Mechanical shift lock */
 
-static int shift_count;
-static uint16_t last_change;
-static bool led_state;
+static bool shift_lock;
+static bool shift_second_seen;
+static bool shift_other_seen;
+static uint8_t shift_layer;
+static uint8_t shift_count;
+static uint16_t shift_start_time;
 
-static bool shift_handler(key_t key, bool pressed)
+static void k_lsft(key_t key);
+static void k_rsft(key_t key);
+
+static bool shift_key_handler(key_t key, bool pressed)
 {
 // TODO: mechanical caps lock
 //  short time both shifts won't change the status
 //  when caps lock is on, should shift keys revert the status momentarily?
-    static const uint16_t interval = 1000;
-    uint16_t now;
-
-    if (key != KEY_NO)
+    if (key != KEY_NO &&
+        keymap[shift_layer][key] != KCFUNC(k_lsft) &&
+        keymap[shift_layer][key] != KCFUNC(k_rsft))
     {
-        return false;
-    }
-    now = timer_read(); // ms
-    if ((uint16_t)(now - last_change) >= interval)
-    {
-        led_state = !led_state;
-        last_change += interval;
-        ergodox_right_led_2_set(led_state ? 50 : 0);
+        shift_other_seen = true;
     }
     return false;
+}
+
+static void shift_start(void)
+{
+    shift_second_seen = false;
+    shift_other_seen = false;
+    shift_layer = layer;
+    shift_start_time = timer_read();
+    add_tmp_handler(shift_key_handler);
+}
+
+static void shift_finish(void)
+{
+    if (!shift_other_seen && shift_second_seen &&
+        (unsigned)timer_read() - (unsigned)shift_start_time < 500)
+    {
+        shift_lock = !shift_lock;
+        ergodox_right_led_1_set(shift_lock ? 255 : 0);
+    }
+    remove_tmp_handler(shift_key_handler);
 }
 
 static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
@@ -315,10 +334,11 @@ static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
     key_release_info[key] = KCFUNC(up_func);
     if (!shift_count++)
     {
-        ergodox_right_led_2_set(50);
-        led_state = true;
-        last_change = timer_read();
-        add_tmp_handler(shift_handler);
+        shift_start();
+    }
+    else
+    {
+        shift_second_seen = true;
     }
 }
 
@@ -327,8 +347,7 @@ static void shift_up(keycode_t code)
     keycode_send(-code);
     if (!--shift_count)
     {
-        ergodox_right_led_2_off();
-        remove_tmp_handler(shift_handler);
+        shift_finish();
     }
 }
 
