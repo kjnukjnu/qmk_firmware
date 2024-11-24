@@ -184,6 +184,9 @@ static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
     tmp_keycode(code);
 }
 
+static void key_press(key_t key);
+static void key_release(key_t key);
+
 typedef bool (*tmp_handler_t)(key_t, bool);
 
 #define MAX_TMP_HANDLERS 10
@@ -364,7 +367,171 @@ static void k_rsft_release(key_t key) {shift_up(KC_RSFT);}
 static void k_lsft(key_t key) {shift_down(key, KC_LSFT, k_lsft_release);}
 static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 
-// TODO: tapping support: add function to receive all events until it requires removal
+/* TODO: layer switch
+
+   tap: switch between BASE/NAVIGATION
+   hold: momentary NAGIVATION layer
+ */
+
+/* TODO: KC_RCTL/FI_ADIA support
+
+   BASE layer:
+     tap: FI_ADIA
+     hold: KC_RCTL
+   NAVIGATION layer:
+     KC_RCTL
+ */
+
+struct tap_state
+{
+    tmp_handler_t handler;
+    uint16_t start;
+    uint16_t t1;
+    uint16_t t2;
+    keycode_t tap;
+    keycode_t hold;
+    key_t key;
+    key_t mystery_key;
+    enum { s1, s2, s3 } state;
+};
+
+static void tap_init(struct tap_state *state,
+                     key_t key,
+                     keycode_t tap,
+                     keycode_t hold,
+                     uint16_t t1,
+                     uint16_t t2,
+                     tmp_handler_t handler)
+{
+    state->handler = handler;
+    state->start = timer_read();
+    state->t1 = t1;
+    state->t2 = t2;
+    state->tap = tap;
+    state->hold = hold;
+    state->key = key;
+    state->state = s1;
+    add_tmp_handler(handler);
+    keycode_send(state->hold);
+    key_release_info[state->key] = KC_NO;
+}
+
+static bool tap_event_s1(struct tap_state *state, key_t key, bool pressed)
+{
+    uint16_t now;
+
+    if (key == state->key) // !pressed
+    {
+        keycode_send(-state->hold, state->tap, -state->tap);
+        remove_tmp_handler(state->handler);
+        return true;
+    }
+    if (key != KEY_NO && pressed)
+    {
+        state->state = s3;
+        state->mystery_key = key;
+        state->start = timer_read();
+        return false;
+    }
+    if (key == KEY_NO)
+    {
+        now = timer_read();
+        if ((unsigned)now - (unsigned)state->start > state->t1)
+        {
+            state->state = s2;
+        }
+        return true;
+    }
+    return false;
+}
+
+static bool tap_event_s2(struct tap_state *state, key_t key, bool pressed)
+{
+    if (key == state->key) // !pressed
+    {
+        keycode_send(-state->hold);
+        remove_tmp_handler(state->handler);
+        return true;
+    }
+    return false;
+}
+
+static bool tap_event_s3(struct tap_state *state, key_t key, bool pressed)
+{
+    uint16_t now;
+
+    if (key == state->mystery_key) // !pressed
+    {
+        key_press(state->mystery_key);
+        key_release(state->mystery_key);
+        state->state = s2;
+        return true;
+    }
+    if (key == state->key) // !pressed
+    {
+        keycode_send(-state->hold);
+        keycode_send(state->tap);
+        key_press(state->mystery_key);
+        keycode_send(-state->tap);
+        remove_tmp_handler(state->handler);
+        return true;
+    }
+    if (key != KEY_NO && pressed)
+    {
+        key_press(state->mystery_key);
+        key_press(key);
+        state->state = s2;
+        return true;
+    }
+    if (key == KEY_NO)
+    {
+        now = timer_read();
+        if ((unsigned)now - (unsigned)state->start > state->t2)
+        {
+            key_press(state->mystery_key);
+            state->state = s2;
+        }
+        return true;
+    }
+    return false;
+}
+
+static bool tap_event(struct tap_state *state, key_t key, bool pressed)
+{
+    switch (state->state)
+    {
+    case s1:
+        return tap_event_s1(state, key, pressed);
+    case s2:
+        return tap_event_s2(state, key, pressed);
+    case s3:
+        return tap_event_s3(state, key, pressed);
+    default:
+        return false;
+    }
+}
+
+static struct tap_state rctl_adia_state;
+
+static bool rctl_adia_handler(key_t key, bool pressed)
+{
+    return tap_event(&rctl_adia_state, key, pressed);
+}
+
+static void rctl_adia_start(key_t key)
+{
+    tap_init(&rctl_adia_state, key, FI_ADIA, KC_RCTL, 100, 100, rctl_adia_handler);
+}
+
+static void k_rctl_adia(key_t key)
+{
+    if (layer == BASE)
+    {
+        simple_key_press(key, KC_RCTL);
+        return;
+    }
+    rctl_adia_start(key);
+}
 
 /* The keymap */
 
@@ -375,7 +542,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,
 
-        KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KC_RCTL /* ctrl/ä (FI_ADIA)) */,
+        KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KCFUNC(k_rctl_adia),
 
         KCFUNC(k_lsft), KC_Z, KC_X, KC_C, KC_V, KC_B, KCFUNC(k_backslash), KCFUNC(k_tilde), KC_N, KC_M, FI_COMM, FI_DOT, FI_MINS, KCFUNC(k_rsft),
 
