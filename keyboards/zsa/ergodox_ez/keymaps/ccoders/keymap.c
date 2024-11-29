@@ -252,21 +252,6 @@ static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_
 static void k_prev_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);}
 static void k_next_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);}
 
-// change layer while layer key is held down
-
-static void k_navigation_layer_off(key_t key)
-{
-    ergodox_right_led_3_off();
-    layer = BASE;
-}
-
-static void k_navigation_layer_on(key_t key)
-{
-    ergodox_right_led_3_set(128);
-    layer = NAVIGATION;
-    key_release_info[key] = KCFUNC(k_navigation_layer_off);
-}
-
 // tilde on FI keyboard: dead tilde plus space
 
 static void k_tilde(key_t key)
@@ -400,10 +385,116 @@ static void k_rsft_release(key_t key) {shift_up(KC_RSFT);}
 static void k_lsft(key_t key) {shift_down(key, KC_LSFT, k_lsft_release);}
 static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 
-// TODO: layer switch
-//
-// tap: switch between BASE/NAVIGATION
-// hold: momentary NAGIVATION layer
+// layer switch from BASE to NAVIGATION
+//   tap: switch layer
+//   hold: switch layer momentarily
+
+#define LAYER_SWITCH_TO_HOLD 500
+
+static struct layer_switch_state
+{
+    uint16_t timer_start;
+    bool hold_enabled;
+    key_t key;
+    enum { layer_switch_key, layer_switch_hold } state;
+} layer_switch_state;
+
+static bool layer_switch_handler(key_t key, bool pressed);
+
+static bool layer_switch_event_key(key_t key, bool pressed)
+{
+    if (key == layer_switch_state.key) // !pressed
+    {
+        // tap
+        if (layer_switch_state.hold_enabled)
+        {
+            // already switched the layer
+        }
+        else
+        {
+            layer = !layer;
+            ergodox_right_led_3_set(layer ? 128 : 0);
+        }
+        remove_tmp_handler(layer_switch_handler);
+        return true;
+    }
+    if (key != KEY_NO && pressed)
+    {
+        if (layer_switch_state.hold_enabled)
+        {
+            layer_switch_state.state = layer_switch_hold;
+        }
+        else
+        {
+            remove_tmp_handler(layer_switch_handler);
+        }
+        return false;
+    }
+    if (key == KEY_NO && layer_switch_state.hold_enabled)
+    {
+        if (timer_diff(timer_read(), layer_switch_state.timer_start) >
+            LAYER_SWITCH_TO_HOLD)
+        {
+            layer_switch_state.state = layer_switch_hold;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool layer_switch_event_hold(key_t key, bool pressed)
+{
+    if (key == layer_switch_state.key) // !pressed
+    {
+        layer = BASE;
+        ergodox_right_led_3_set(0);
+        remove_tmp_handler(layer_switch_handler);
+        return true;
+    }
+    return false;
+}
+
+static bool layer_switch_handler(key_t key, bool pressed)
+{
+    switch (layer_switch_state.state)
+    {
+    case layer_switch_key:
+        return layer_switch_event_key(key, pressed);
+    case layer_switch_hold:
+        return layer_switch_event_hold(key, pressed);
+    default:
+        return false;
+    }
+}
+
+static void layer_switch_start(key_t key,
+                               bool hold_enabled)
+{
+    layer_switch_state.timer_start = timer_read();
+    layer_switch_state.key = key;
+    layer_switch_state.hold_enabled = hold_enabled;
+    layer_switch_state.state = layer_switch_key;
+    if (layer_switch_state.hold_enabled)
+    {
+        layer = !layer;
+        ergodox_right_led_3_set(layer ? 128 : 0);
+    }
+    add_tmp_handler(layer_switch_handler);
+}
+
+static void k_navigation_layer_on(key_t key)
+{
+    layer_switch_start(key, true);
+}
+
+// layer switch from NAVIGATION to BASE
+//   tap: switch layer
+//   hold: -
+
+static void k_navigation_layer_off(key_t key)
+{
+    layer_switch_start(key, false);
+}
 
 // KC_RCTL/FI_ADIA support
 //   BASE layer:
@@ -578,7 +669,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
@@ -587,13 +678,13 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_BTN2, KC_MS_U, KC_BTN1, KC_NO, KC_F12,
 
-        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_WFWD, KC_RCTL /*ctrl/Ä (FI_ADIA)*/,
+        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_WFWD, KC_RCTL,
 
         KCFUNC(k_lsft), KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KCFUNC(k_rsft),
 
-        KC_NO /* MAC: unnecessary? */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO /*layer*/, KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
+        KC_NO /* MAC: unnecessary? */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_off), KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, KC_NO, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
 };
 
