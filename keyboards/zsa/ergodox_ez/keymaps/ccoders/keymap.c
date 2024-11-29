@@ -404,7 +404,7 @@ struct tap_state
     keycode_t hold;
     key_t key;
     key_t mystery_key;
-    enum { s1, s2, s3 } state;
+    enum { tap_key, tap_hold, tap_key_a } state;
 };
 
 static void tap_start(struct tap_state *state,
@@ -422,13 +422,13 @@ static void tap_start(struct tap_state *state,
     state->tap = tap;
     state->hold = hold;
     state->key = key;
-    state->state = s1;
+    state->state = tap_key;
     add_tmp_handler(handler);
     keycode_send(state->hold);
     key_release_info[state->key] = KC_NO;
 }
 
-static bool tap_event_s1(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
 {
     uint16_t now;
 
@@ -440,7 +440,7 @@ static bool tap_event_s1(struct tap_state *state, key_t key, bool pressed)
     }
     if (key != KEY_NO && pressed)
     {
-        state->state = s3;
+        state->state = tap_key_a;
         state->mystery_key = key;
         state->start = timer_read();
         return true;
@@ -450,14 +450,14 @@ static bool tap_event_s1(struct tap_state *state, key_t key, bool pressed)
         now = timer_read();
         if ((unsigned)now - (unsigned)state->start > state->t1)
         {
-            state->state = s2;
+            state->state = tap_hold;
         }
         return true;
     }
     return false;
 }
 
-static bool tap_event_s2(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event_hold(struct tap_state *state, key_t key, bool pressed)
 {
     if (key == state->key) // !pressed
     {
@@ -468,7 +468,7 @@ static bool tap_event_s2(struct tap_state *state, key_t key, bool pressed)
     return false;
 }
 
-static bool tap_event_s3(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event_key_a(struct tap_state *state, key_t key, bool pressed)
 {
     uint16_t now;
 
@@ -476,7 +476,7 @@ static bool tap_event_s3(struct tap_state *state, key_t key, bool pressed)
     {
         key_press(state->mystery_key);
         key_release(state->mystery_key);
-        state->state = s2;
+        state->state = tap_hold;
         return true;
     }
     if (key == state->key) // !pressed
@@ -492,7 +492,7 @@ static bool tap_event_s3(struct tap_state *state, key_t key, bool pressed)
     {
         key_press(state->mystery_key);
         key_press(key);
-        state->state = s2;
+        state->state = tap_hold;
         return true;
     }
     if (key == KEY_NO)
@@ -501,7 +501,7 @@ static bool tap_event_s3(struct tap_state *state, key_t key, bool pressed)
         if ((unsigned)now - (unsigned)state->start > state->t2)
         {
             key_press(state->mystery_key);
-            state->state = s2;
+            state->state = tap_hold;
         }
         return true;
     }
@@ -512,12 +512,12 @@ static bool tap_event(struct tap_state *state, key_t key, bool pressed)
 {
     switch (state->state)
     {
-    case s1:
-        return tap_event_s1(state, key, pressed);
-    case s2:
-        return tap_event_s2(state, key, pressed);
-    case s3:
-        return tap_event_s3(state, key, pressed);
+    case tap_key:
+        return tap_event_key(state, key, pressed);
+    case tap_hold:
+        return tap_event_hold(state, key, pressed);
+    case tap_key_a:
+        return tap_event_key_a(state, key, pressed);
     default:
         return false;
     }
@@ -555,7 +555,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO /* TODO: teams mute toggle: KC_LSFT/KC_LCTL/KC_M */, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
