@@ -336,10 +336,15 @@ static void shift_start(void)
     add_tmp_handler(shift_key_handler);
 }
 
+static unsigned timer_diff(unsigned now, unsigned start)
+{
+    return now - start;
+}
+
 static void shift_finish(void)
 {
     if (!shift_state.other_seen && shift_state.second_seen &&
-        (unsigned)timer_read() - (unsigned)shift_state.start_time < 500)
+        timer_diff(timer_read(), shift_state.start_time) < 500)
     {
         shift_state.lock = !shift_state.lock;
         ergodox_right_led_1_set(shift_state.lock ? 255 : 0);
@@ -433,8 +438,6 @@ static void tap_start(struct tap_state *state,
 
 static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
 {
-    uint16_t now;
-
     if (key == state->key) // !pressed
     {
         keycode_send(-state->hold, state->tap, -state->tap);
@@ -451,8 +454,7 @@ static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
     }
     if (key == KEY_NO)
     {
-        now = timer_read();
-        if ((unsigned)now - (unsigned)state->timer_start > state->t1)
+        if (timer_diff(timer_read(), state->timer_start) > state->t1)
         {
             state->state = tap_hold;
         }
@@ -474,8 +476,6 @@ static bool tap_event_hold(struct tap_state *state, key_t key, bool pressed)
 
 static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool pressed)
 {
-    uint16_t now;
-
     if (key == state->mystery) // !pressed
     {
         key_press(state->mystery);
@@ -485,9 +485,8 @@ static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool press
     }
     if (key == state->key) // !pressed
     {
-        now = timer_read();
-        if (((unsigned)now - (unsigned)state->mystery_key_down) * 3 >
-            (unsigned)state->mystery_key_down - (unsigned)state->key_down)
+        if (timer_diff(timer_read(), state->mystery_key_down) * 3 >
+            timer_diff(state->mystery_key_down, state->key_down))
         {
             key_press(state->mystery);
             keycode_send(-state->hold);
@@ -511,8 +510,7 @@ static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool press
     }
     if (key == KEY_NO)
     {
-        now = timer_read();
-        if ((unsigned)now - (unsigned)state->timer_start > state->t2)
+        if (timer_diff(timer_read(), state->timer_start) > state->t2)
         {
             key_press(state->mystery);
             state->state = tap_hold;
