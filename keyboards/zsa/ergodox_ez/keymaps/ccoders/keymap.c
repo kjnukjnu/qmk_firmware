@@ -397,14 +397,15 @@ static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 struct tap_state
 {
     tmp_handler_t handler;
-    uint16_t start;
+    uint16_t timer_start;
     uint16_t t1;
     uint16_t t2;
+    uint16_t key_down;
     keycode_t tap;
     keycode_t hold;
     key_t key;
-    key_t mystery_key;
-    enum { tap_key, tap_hold, tap_key_a } state;
+    key_t mystery;
+    enum { tap_key, tap_hold, tap_key_mystery } state;
 };
 
 static void tap_start(struct tap_state *state,
@@ -416,7 +417,8 @@ static void tap_start(struct tap_state *state,
                       tmp_handler_t handler)
 {
     state->handler = handler;
-    state->start = timer_read();
+    state->timer_start = timer_read();
+    state->key_down = state->timer_start;
     state->t1 = t1;
     state->t2 = t2;
     state->tap = tap;
@@ -440,15 +442,15 @@ static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
     }
     if (key != KEY_NO && pressed)
     {
-        state->state = tap_key_a;
-        state->mystery_key = key;
-        state->start = timer_read();
+        state->state = tap_key_mystery;
+        state->mystery = key;
+        state->timer_start = timer_read();
         return true;
     }
     if (key == KEY_NO)
     {
         now = timer_read();
-        if ((unsigned)now - (unsigned)state->start > state->t1)
+        if ((unsigned)now - (unsigned)state->timer_start > state->t1)
         {
             state->state = tap_hold;
         }
@@ -468,14 +470,14 @@ static bool tap_event_hold(struct tap_state *state, key_t key, bool pressed)
     return false;
 }
 
-static bool tap_event_key_a(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool pressed)
 {
     uint16_t now;
 
-    if (key == state->mystery_key) // !pressed
+    if (key == state->mystery) // !pressed
     {
-        key_press(state->mystery_key);
-        key_release(state->mystery_key);
+        key_press(state->mystery);
+        key_release(state->mystery);
         state->state = tap_hold;
         return true;
     }
@@ -483,14 +485,14 @@ static bool tap_event_key_a(struct tap_state *state, key_t key, bool pressed)
     {
         keycode_send(-state->hold);
         keycode_send(state->tap);
-        key_press(state->mystery_key);
+        key_press(state->mystery);
         keycode_send(-state->tap);
         remove_tmp_handler(state->handler);
         return true;
     }
     if (key != KEY_NO && pressed)
     {
-        key_press(state->mystery_key);
+        key_press(state->mystery);
         key_press(key);
         state->state = tap_hold;
         return true;
@@ -498,9 +500,9 @@ static bool tap_event_key_a(struct tap_state *state, key_t key, bool pressed)
     if (key == KEY_NO)
     {
         now = timer_read();
-        if ((unsigned)now - (unsigned)state->start > state->t2)
+        if ((unsigned)now - (unsigned)state->timer_start > state->t2)
         {
-            key_press(state->mystery_key);
+            key_press(state->mystery);
             state->state = tap_hold;
         }
         return true;
@@ -516,8 +518,8 @@ static bool tap_event(struct tap_state *state, key_t key, bool pressed)
         return tap_event_key(state, key, pressed);
     case tap_hold:
         return tap_event_hold(state, key, pressed);
-    case tap_key_a:
-        return tap_event_key_a(state, key, pressed);
+    case tap_key_mystery:
+        return tap_event_key_mystery(state, key, pressed);
     default:
         return false;
     }
