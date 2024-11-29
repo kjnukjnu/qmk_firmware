@@ -313,6 +313,8 @@ static void k_teams_mute(key_t key)
 
 // mechanical shift lock: kind of caps lock when tapping both shifts
 
+#define SHIFT_ALLOWED_JITTER 500
+
 static struct shift_state
 {
     bool lock;
@@ -355,7 +357,7 @@ static unsigned timer_diff(unsigned now, unsigned start)
 static void shift_finish(void)
 {
     if (!shift_state.other_seen && shift_state.second_seen &&
-        timer_diff(timer_read(), shift_state.start_time) < 500)
+        timer_diff(timer_read(), shift_state.start_time) < SHIFT_ALLOWED_JITTER)
     {
         shift_state.lock = !shift_state.lock;
         ergodox_right_led_1_set(shift_state.lock ? 255 : 0);
@@ -410,12 +412,14 @@ static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 //   NAVIGATION layer:
 //     KC_RCTL
 
+#define TAP_HOLD_TIMEOUT 500
+#define TAP_MYSTERY_TIMEOUT 50
+#define TAP_TIE_COEFF 3
+
 struct tap_state
 {
     tmp_handler_t handler;
     uint16_t timer_start;
-    uint16_t t1;
-    uint16_t t2;
     uint16_t key_down;
     uint16_t mystery_key_down;
     keycode_t tap;
@@ -429,15 +433,11 @@ static void tap_start(struct tap_state *state,
                       key_t key,
                       keycode_t tap,
                       keycode_t hold,
-                      uint16_t t1,
-                      uint16_t t2,
                       tmp_handler_t handler)
 {
     state->handler = handler;
     state->timer_start = timer_read();
     state->key_down = state->timer_start;
-    state->t1 = t1;
-    state->t2 = t2;
     state->tap = tap;
     state->hold = hold;
     state->key = key;
@@ -465,7 +465,7 @@ static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
     }
     if (key == KEY_NO)
     {
-        if (timer_diff(timer_read(), state->timer_start) > state->t1)
+        if (timer_diff(timer_read(), state->timer_start) > TAP_HOLD_TIMEOUT)
         {
             state->state = tap_hold;
         }
@@ -496,7 +496,7 @@ static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool press
     }
     if (key == state->key) // !pressed
     {
-        if (timer_diff(timer_read(), state->mystery_key_down) * 3 >
+        if (timer_diff(timer_read(), state->mystery_key_down) * TAP_TIE_COEFF >
             timer_diff(state->mystery_key_down, state->key_down))
         {
             key_press(state->mystery);
@@ -521,7 +521,7 @@ static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool press
     }
     if (key == KEY_NO)
     {
-        if (timer_diff(timer_read(), state->timer_start) > state->t2)
+        if (timer_diff(timer_read(), state->timer_start) > TAP_MYSTERY_TIMEOUT)
         {
             key_press(state->mystery);
             state->state = tap_hold;
@@ -560,7 +560,7 @@ static void k_rctl_adia(key_t key)
         simple_key_press(key, KC_RCTL);
         return;
     }
-    tap_start(&rctl_adia_state, key, FI_ADIA, KC_RCTL, 500, 50, rctl_adia_handler);
+    tap_start(&rctl_adia_state, key, FI_ADIA, KC_RCTL, rctl_adia_handler);
 }
 
 /* The keymap */
