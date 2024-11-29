@@ -300,6 +300,17 @@ static void k_four_dollar(key_t key)
     }
 }
 
+// teams mute on/off (KC_NO if there are modifiers)
+
+static void k_teams_mute(key_t key)
+{
+    if (modifiers != 0)
+    {
+        return;
+    }
+    tmp_keycode(KC_LSFT, KC_LCTL, KC_M);
+}
+
 // mechanical shift lock: kind of caps lock when tapping both shifts
 
 static struct shift_state
@@ -567,7 +578,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KC_NO /* TODO: teams mute toggle: KC_LSFT/KC_LCTL/KC_M */, KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO /* teams mute/unmute */, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
