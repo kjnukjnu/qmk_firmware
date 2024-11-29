@@ -400,8 +400,8 @@ struct tap_state
     uint16_t timer_start;
     uint16_t t1;
     uint16_t t2;
-    uint16_t t3;
     uint16_t key_down;
+    uint16_t mystery_key_down;
     keycode_t tap;
     keycode_t hold;
     key_t key;
@@ -415,7 +415,6 @@ static void tap_start(struct tap_state *state,
                       keycode_t hold,
                       uint16_t t1,
                       uint16_t t2,
-                      uint16_t t3,
                       tmp_handler_t handler)
 {
     state->handler = handler;
@@ -423,7 +422,6 @@ static void tap_start(struct tap_state *state,
     state->key_down = state->timer_start;
     state->t1 = t1;
     state->t2 = t2;
-    state->t3 = t3;
     state->tap = tap;
     state->hold = hold;
     state->key = key;
@@ -448,6 +446,7 @@ static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
         state->state = tap_key_mystery;
         state->mystery = key;
         state->timer_start = timer_read();
+        state->mystery_key_down = state->timer_start;
         return true;
     }
     if (key == KEY_NO)
@@ -487,7 +486,8 @@ static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool press
     if (key == state->key) // !pressed
     {
         now = timer_read();
-        if ((unsigned)now - (unsigned)state->key_down >= state->t3)
+        if (((unsigned)now - (unsigned)state->mystery_key_down) * 3 >
+            (unsigned)state->mystery_key_down - (unsigned)state->key_down)
         {
             key_press(state->mystery);
             keycode_send(-state->hold);
@@ -551,7 +551,7 @@ static void k_rctl_adia(key_t key)
         simple_key_press(key, KC_RCTL);
         return;
     }
-    tap_start(&rctl_adia_state, key, FI_ADIA, KC_RCTL, 500, 50, 300, rctl_adia_handler);
+    tap_start(&rctl_adia_state, key, FI_ADIA, KC_RCTL, 500, 50, rctl_adia_handler);
 }
 
 /* The keymap */
