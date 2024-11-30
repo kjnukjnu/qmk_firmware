@@ -3,6 +3,7 @@
 #include "keymap_finnish.h"
 
 // TODO: build in docker container
+// TODO: check if there is superfluous debouncing in use?
 
 /* ccoders keymap
 
@@ -681,7 +682,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         KCFUNC(k_lsft), KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KCFUNC(k_rsft),
 
-        KC_NO /* MAC: unnecessary? */, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_off), KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
+        KC_NO, KC_BRK, KC_INS, KC_NO, KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_off), KC_VOLD, KC_VOLU, KC_MPRV, KC_MNXT,
 
         KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
