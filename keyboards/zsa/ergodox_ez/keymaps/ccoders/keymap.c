@@ -405,7 +405,6 @@ static bool layer_switch_event_key(key_t key, bool pressed)
 {
     if (key == layer_switch_state.key) // !pressed
     {
-        // tap
         if (layer_switch_state.hold_enabled)
         {
             // already switched the layer
@@ -436,8 +435,8 @@ static bool layer_switch_event_key(key_t key, bool pressed)
             LAYER_SWITCH_TO_HOLD)
         {
             layer_switch_state.state = layer_switch_hold;
-            return true;
         }
+        return true;
     }
     return false;
 }
@@ -446,8 +445,8 @@ static bool layer_switch_event_hold(key_t key, bool pressed)
 {
     if (key == layer_switch_state.key) // !pressed
     {
-        layer = BASE;
-        ergodox_right_led_3_set(0);
+        layer = !layer;
+        ergodox_right_led_3_set(layer ? 128 : 0);
         remove_tmp_handler(layer_switch_handler);
         return true;
     }
