@@ -250,8 +250,30 @@ static void k_lbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_8)
 static void k_rbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_9);}
 static void k_ad(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_2);}
 static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_DIAE);}
-static void k_prev_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);}
-static void k_next_word(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);}
+
+static void k_next_word(key_t key)
+{
+  if (!modifiers)
+    {
+      tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);
+    }
+  else
+    {
+      simple_key_press(key, KC_R);
+    }
+}
+
+static void k_prev_word(key_t key)
+{
+  if (!modifiers)
+    {
+      tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);
+    }
+  else
+    {
+      simple_key_press(key, KC_W);
+    }
+}
 
 // tilde on FI keyboard: dead tilde plus space
 
