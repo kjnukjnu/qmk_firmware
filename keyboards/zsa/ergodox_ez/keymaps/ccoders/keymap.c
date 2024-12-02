@@ -298,6 +298,7 @@ static void k_teams_mute(key_t key)
 }
 
 // mechanical shift lock: kind of caps lock when tapping both shifts
+//   ...except that numbers are kept without shift
 
 #define SHIFT_ALLOWED_JITTER 500
 
@@ -316,8 +317,7 @@ static void k_rsft(key_t key);
 
 static bool shift_key_handler(key_t key, bool pressed)
 {
-//  todo: when caps lock is on, should shift keys revert the status momentarily?
-    if (key != KEY_NO &&
+    if (key != KEY_NO && pressed &&
         keymap[shift_state.layer][key] != KCFUNC(k_lsft) &&
         keymap[shift_state.layer][key] != KCFUNC(k_rsft))
     {
@@ -340,6 +340,31 @@ static unsigned timer_diff(unsigned now, unsigned start)
     return now - start;
 }
 
+static bool shift_locked_handler(key_t key, bool pressed)
+{
+    if (key != KC_NO && pressed)
+    {
+        mod_bits_t shifts = MOD_BIT_LSHIFT | MOD_BIT_RSHIFT;
+        keycode_t code;
+
+        if (modifiers & ~shifts)
+        {
+            return false;
+        }
+        code = keymap[shift_state.layer][key];
+        if (code == KCFUNC(k_four_dollar))
+        {
+            code = KC_4;
+        }
+        if (code >= KC_1 && code <= KC_0)
+        {
+            tmp_keycode(-KC_LSFT, -KC_RSFT, code);
+            return true;
+        }
+    }
+    return false;
+}
+
 static void shift_finish(void)
 {
     if (!shift_state.other_seen && shift_state.second_seen &&
@@ -347,9 +372,14 @@ static void shift_finish(void)
     {
         shift_state.lock = !shift_state.lock;
         ergodox_right_led_1_set(shift_state.lock ? 255 : 0);
-        if (!shift_state.lock)
+        if (shift_state.lock)
+        {
+            add_tmp_handler(shift_locked_handler);
+        }
+        else
         {
             keycode_send(-KC_LSFT, -KC_RSFT);
+            remove_tmp_handler(shift_locked_handler);
         }
     }
     remove_tmp_handler(shift_key_handler);
