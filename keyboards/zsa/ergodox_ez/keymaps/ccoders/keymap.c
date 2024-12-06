@@ -555,9 +555,9 @@ static void k_navigation_layer_off(key_t key)
 //   NAVIGATION layer:
 //     KC_RCTL
 
-#define TAP_HOLD_TIMEOUT 500
+#define TAP_HOLD_TIMEOUT 300
 #define TAP_MYSTERY_TIMEOUT 50
-#define TAP_TIE_COEFF 3
+#define TAP_TIE_TIMEOUT 200
 
 struct tap_state
 {
@@ -639,8 +639,7 @@ static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool press
     }
     if (key == state->key) // !pressed
     {
-        if (timer_diff(timer_read(), state->mystery_key_down) * TAP_TIE_COEFF >
-            timer_diff(state->mystery_key_down, state->key_down))
+        if (timer_diff(timer_read(), state->mystery_key_down) > TAP_TIE_TIMEOUT)
         {
             key_press(state->mystery);
             keycode_send(-state->hold);
