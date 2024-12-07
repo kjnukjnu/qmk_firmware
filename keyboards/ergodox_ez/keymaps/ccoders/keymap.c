@@ -725,7 +725,7 @@ static void k_rctl_adia(key_t key)
 
 /* The keymap */
 
-static const keycode_t my_keymap[][KEY_COUNT] = {
+static const unsigned my_keymap[][KEY_COUNT] = {
     /* BASE */
     {
         KC_ESC, KC_1, KC_2, KC_3, KCFUNC(k_four_dollar), KC_5, FI_DIAE, FI_ACUT, KC_6, KC_7, KC_8, KC_9, KC_0, FI_PLUS,
