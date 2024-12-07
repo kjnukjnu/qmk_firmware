@@ -101,7 +101,7 @@ static keycode_t modbit_keycode(int bit_number)
 
 /* Current keyboard status */
 
-//static intptr_t key_release_info[KEY_COUNT]; // what to do on key release
+static unsigned key_release_info[KEY_COUNT]; // what to do on key release
 static bool keycode_active_status[255]; // what keycodes are currently reported
 
 static bool keycode_active(keycode_t code)
@@ -141,13 +141,11 @@ static void keycode_send(keycode_t code)
 
 #define keycode_send(...) CALL_FUNC(keycode_send, __VA_ARGS__)
 
-#if 0
 static void simple_key_press(key_t key, keycode_t code)
 {
     keycode_send(code);
     key_release_info[key] = code;
 }
-#endif
 
 /* Temporary keycodes to be reverted on the next key event */
 
@@ -759,10 +757,9 @@ static const unsigned my_keymap[][KEY_COUNT] = {
 
 /* Event handling (replaces qmk's default event handling */
 
-#if 0
 static void key_press(key_t key)
 {
-    const intptr_t *key_info = &keymap[layer][key];
+    const unsigned *key_info = &my_keymap[layer][key];
 
     if (*key_info > 255)
     {
@@ -777,7 +774,7 @@ static void key_press(key_t key)
 
 static void key_release(key_t key)
 {
-    intptr_t *key_info = &key_release_info[key];
+    unsigned *key_info = &key_release_info[key];
 
     if (*key_info > 255)
     {
@@ -790,7 +787,6 @@ static void key_release(key_t key)
     }
     *key_info = KC_NO;
 }
-#endif
 
 #if 0
 static void clean_tmp_keycodes(void)
@@ -833,13 +829,11 @@ bool user_action_exec(keyevent_t event)
         {
             if (event.pressed)
             {
-                keycode_send(code);
-                //key_press(key);
+                key_press(key);
             }
             else
             {
-                keycode_send(-code);
-                //key_release(key);
+                key_release(key);
             }
         }
     }
