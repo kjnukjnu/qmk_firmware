@@ -66,11 +66,18 @@ __attribute__((weak)) bool get_retro_tapping(uint16_t keycode, keyrecord_t *reco
 }
 #endif
 
+__attribute__((weak)) bool user_action_exec(keyevent_t event) {
+    return false;
+}
+
 /** \brief Called to execute an action.
  *
  * FIXME: Needs documentation.
  */
 void action_exec(keyevent_t event) {
+    if (user_action_exec(event)) {
+        return;
+    }
     if (IS_EVENT(event)) {
         ac_dprintf("\n---- action_exec: start -----\n");
         ac_dprintf("EVENT: ");
