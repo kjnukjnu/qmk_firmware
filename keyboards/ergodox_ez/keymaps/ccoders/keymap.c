@@ -64,7 +64,7 @@ static bool keycode_is_press(keycode_t code)
 typedef uint8_t mod_bits_t; // modifier bitmap type
 static mod_bits_t modifiers; // current modifiers
 
-static const keycode_t PROGMEM modbit_keycodes[] =
+static const keycode_t modbit_keycodes[] =
 { KC_LCTL, KC_LSFT, KC_LALT, KC_LGUI, KC_RCTL, KC_RSFT, KC_RALT, KC_RGUI };
 
 static mod_bits_t keycode_modbit(keycode_t code)
@@ -231,7 +231,7 @@ enum layers {
 static unsigned layer = 0;
 
 // forward declarations for key functions
-static const intptr_t PROGMEM keymap[][KEY_COUNT];
+static const intptr_t keymap[][KEY_COUNT];
 static void key_press(key_t key);
 static void key_release(key_t key);
 
@@ -715,7 +715,7 @@ static void k_rctl_adia(key_t key)
 
 /* The keymap */
 
-static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
+static const intptr_t keymap[][KEY_COUNT] = {
     /* BASE */
     {
         KC_ESC, KC_1, KC_2, KC_3, KCFUNC(k_four_dollar), KC_5, FI_DIAE, FI_ACUT, KC_6, KC_7, KC_8, KC_9, KC_0, FI_PLUS,
@@ -835,4 +835,4 @@ bool user_action_exec(keyevent_t event)
 
 /* Dummy definitions required by qmk build system, not used by us */
 
-const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS];
+const uint16_t keymaps[0][MATRIX_ROWS][MATRIX_COLS];
