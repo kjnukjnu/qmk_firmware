@@ -220,6 +220,50 @@ static void remove_tmp_handler(tmp_handler_t func)
     --tmp_handler_cnt;
 }
 
+/* LEDs */
+
+#define CAPS_LED 1
+#define LAYER_LED 3
+
+static void kb_led_set(int led, bool on)
+{
+    switch (led)
+    {
+    case 1:
+        if (on)
+        {
+            ergodox_right_led_1_on();
+        }
+        else
+        {
+            ergodox_right_led_1_off();
+        }
+        break;
+    case 2:
+        if (on)
+        {
+            ergodox_right_led_2_on();
+        }
+        else
+        {
+            ergodox_right_led_2_off();
+        }
+        break;
+    case 3:
+        if (on)
+        {
+            ergodox_right_led_3_on();
+        }
+        else
+        {
+            ergodox_right_led_3_off();
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 /* Key functions for the cases simple keycode mapping is not enough */
 
 // layer definitions used by our keymap
@@ -401,7 +445,7 @@ static void shift_finish(void)
         timer_diff(timer_read(), shift_state.start_time) < SHIFT_ALLOWED_JITTER)
     {
         shift_state.lock = !shift_state.lock;
-        ergodox_right_led_1_set(shift_state.lock ? 255 : 0);
+        kb_led_set(CAPS_LED, shift_state.lock);
         if (shift_state.lock)
         {
             add_tmp_handler(shift_locked_handler);
@@ -473,7 +517,7 @@ static bool layer_switch_event_key(key_t key, bool pressed)
         else
         {
             layer = !layer;
-            ergodox_right_led_3_set(layer ? 128 : 0);
+            kb_led_set(LAYER_LED, layer);
         }
         remove_tmp_handler(layer_switch_handler);
         return true;
@@ -507,7 +551,7 @@ static bool layer_switch_event_hold(key_t key, bool pressed)
     if (key == layer_switch_state.key) // !pressed
     {
         layer = !layer;
-        ergodox_right_led_3_set(layer ? 128 : 0);
+        kb_led_set(LAYER_LED, layer);
         remove_tmp_handler(layer_switch_handler);
         return true;
     }
@@ -537,7 +581,7 @@ static void layer_switch_start(key_t key,
     if (layer_switch_state.hold_enabled)
     {
         layer = !layer;
-        ergodox_right_led_3_set(layer ? 128 : 0);
+        kb_led_set(LAYER_LED, layer);
     }
     add_tmp_handler(layer_switch_handler);
 }
