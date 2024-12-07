@@ -253,25 +253,33 @@ static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_
 
 static void k_next_word(key_t key)
 {
-  if (!modifiers)
+    if (!modifiers)
     {
-      tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);
+        tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_RIGHT);
     }
-  else
+    else
     {
-      simple_key_press(key, KC_R);
+        simple_key_press(key, KC_R);
     }
 }
 
 static void k_prev_word(key_t key)
 {
-  if (!modifiers)
+    if (!modifiers)
     {
-      tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);
+        tmp_modifiers_and_keycode(MOD_BIT_LCTRL, KC_LEFT);
     }
-  else
+    else
     {
-      simple_key_press(key, KC_W);
+        simple_key_press(key, KC_W);
+    }
+}
+
+static void k_ctrl_x_b(key_t key)
+{
+    if (!modifiers)
+    {
+        keycode_send(KC_LCTL, KC_X, -KC_X, -KC_LCTL, KC_B, -KC_B);
     }
 }
 
@@ -720,7 +728,7 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, FI_ADIA, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KCFUNC(k_ctrl_x_b), KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
