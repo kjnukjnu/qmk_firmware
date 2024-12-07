@@ -609,7 +609,7 @@ static void k_navigation_layer_off(key_t key)
 
 #define TAP_HOLD_TIMEOUT 200
 #define TAP_MYSTERY_TIMEOUT 50
-#define TAP_TIE_TIMEOUT 50
+#define TAP_TIE_TIMEOUT 10
 
 struct tap_state
 {
