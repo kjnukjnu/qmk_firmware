@@ -236,7 +236,7 @@ enum layers {
     BASE,
     NAVIGATION
 };
-//static unsigned layer = 0;
+static unsigned layer = 0;
 
 // forward declarations for key functions
 //static const intptr_t PROGMEM keymap[][KEY_COUNT];
@@ -725,8 +725,7 @@ static void k_rctl_adia(key_t key)
 
 /* The keymap */
 
-#if 0
-static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
+static const keycode_t my_keymap[][KEY_COUNT] = {
     /* BASE */
     {
         KC_ESC, KC_1, KC_2, KC_3, KCFUNC(k_four_dollar), KC_5, FI_DIAE, FI_ACUT, KC_6, KC_7, KC_8, KC_9, KC_0, FI_PLUS,
@@ -757,7 +756,6 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
         KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
 };
-#endif
 
 /* Event handling (replaces qmk's default event handling */
 
@@ -824,22 +822,23 @@ bool user_action_exec(keyevent_t event)
     }
     if (event.type == KEY_EVENT)
     {
-        //uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
+        uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
         /* TODO: allow removal of ordinary keys that are not part of the
          * temporary keys without cleaning the tmp_keycodes. This makes the
          * sequence SHIFT/5/4/-5 stay in a state where the autorepeat of $
          * works. */
         // clean_tmp_keycodes();
-        if (true /* !call_tmp_handlers(key, event.pressed) */)
+        keycode_t code = my_keymap[layer][key];
+        if (code != KC_NO /* !call_tmp_handlers(key, event.pressed) */)
         {
             if (event.pressed)
             {
-                keycode_send(KC_A);
+                keycode_send(code);
                 //key_press(key);
             }
             else
             {
-                keycode_send(-KC_A);
+                keycode_send(-code);
                 //key_release(key);
             }
         }
