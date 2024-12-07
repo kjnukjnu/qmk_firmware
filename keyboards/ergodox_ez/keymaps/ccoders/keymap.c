@@ -92,14 +92,16 @@ static mod_bits_t keycode_modbit(keycode_t code)
     };
 }
 
+#if 0
 static keycode_t modbit_keycode(int bit_number)
 {
     return modbit_keycodes[bit_number];
 }
+#endif
 
 /* Current keyboard status */
 
-static intptr_t key_release_info[KEY_COUNT]; // what to do on key release
+//static intptr_t key_release_info[KEY_COUNT]; // what to do on key release
 static bool keycode_active_status[255]; // what keycodes are currently reported
 
 static bool keycode_active(keycode_t code)
@@ -139,14 +141,17 @@ static void keycode_send(keycode_t code)
 
 #define keycode_send(...) CALL_FUNC(keycode_send, __VA_ARGS__)
 
+#if 0
 static void simple_key_press(key_t key, keycode_t code)
 {
     keycode_send(code);
     key_release_info[key] = code;
 }
+#endif
 
 /* Temporary keycodes to be reverted on the next key event */
 
+#if 0
 #define MAX_TMP_KEYCODES 10
 static keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
 static int tmp_keycode_count;
@@ -181,9 +186,11 @@ static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
     }
     tmp_keycode(code);
 }
+#endif
 
 /* Temporary additional handlers to support complex key functions */
 
+#if 0
 typedef bool (*tmp_handler_t)(key_t, bool);
 
 #define MAX_TMP_HANDLERS 10
@@ -219,6 +226,7 @@ static void remove_tmp_handler(tmp_handler_t func)
     }
     --tmp_handler_cnt;
 }
+#endif
 
 /* Key functions for the cases simple keycode mapping is not enough */
 
@@ -228,19 +236,19 @@ enum layers {
     BASE,
     NAVIGATION
 };
-static unsigned layer = 0;
+//static unsigned layer = 0;
 
 // forward declarations for key functions
-static const intptr_t PROGMEM keymap[][KEY_COUNT];
-static void key_press(key_t key);
-static void key_release(key_t key);
+//static const intptr_t PROGMEM keymap[][KEY_COUNT];
+//static void key_press(key_t key);
+//static void key_release(key_t key);
 
 // key function type definition and macro to use it in keymap
 typedef void (*key_func_t)(key_t key);
-#define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
+#define KCFUNC(m_arg_func) KC_NO
 
 // the actual key functions start here
-
+#if 0
 static void k_brace_left(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_7);}
 static void k_brace_right(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_0);}
 static void k_backslash(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_PLUS);}
@@ -713,8 +721,11 @@ static void k_rctl_adia(key_t key)
     tap_start(&rctl_adia_state, key, FI_ADIA, KC_RCTL, rctl_adia_handler);
 }
 
+#endif
+
 /* The keymap */
 
+#if 0
 static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
     /* BASE */
     {
@@ -746,9 +757,11 @@ static const intptr_t PROGMEM keymap[][KEY_COUNT] = {
         KC_NO, KC_DEL, KC_LGUI, KC_LALT, KC_PSCR, KC_NO, KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KC_NO, KC_BSPC, KC_NO,
     },
 };
+#endif
 
 /* Event handling (replaces qmk's default event handling */
 
+#if 0
 static void key_press(key_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
@@ -779,7 +792,9 @@ static void key_release(key_t key)
     }
     *key_info = KC_NO;
 }
+#endif
 
+#if 0
 static void clean_tmp_keycodes(void)
 {
     while (tmp_keycode_count > 0)
@@ -797,6 +812,7 @@ static bool call_tmp_handlers(key_t key, bool pressed)
     }
     return ret;
 }
+#endif
 
 // hook early into qmk's event handling
 
@@ -808,31 +824,33 @@ bool user_action_exec(keyevent_t event)
     }
     if (event.type == KEY_EVENT)
     {
-        uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
+        //uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
         /* TODO: allow removal of ordinary keys that are not part of the
          * temporary keys without cleaning the tmp_keycodes. This makes the
          * sequence SHIFT/5/4/-5 stay in a state where the autorepeat of $
          * works. */
-        clean_tmp_keycodes();
-        if (!call_tmp_handlers(key, event.pressed))
+        // clean_tmp_keycodes();
+        if (true /* !call_tmp_handlers(key, event.pressed) */)
         {
             if (event.pressed)
             {
-                key_press(key);
+                keycode_send(KC_A);
+                //key_press(key);
             }
             else
             {
-                key_release(key);
+                keycode_send(-KC_A);
+                //key_release(key);
             }
         }
     }
     else
     {
-        (void)call_tmp_handlers(KEY_NO, false);
+        //(void)call_tmp_handlers(KEY_NO, false);
     }
     return true;
 }
 
 /* Dummy definitions required by qmk build system, not used by us */
 
-const uint16_t PROGMEM keymaps[0][MATRIX_ROWS][MATRIX_COLS];
+const uint16_t keymaps[0][MATRIX_ROWS][MATRIX_COLS];
