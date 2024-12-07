@@ -92,12 +92,10 @@ static mod_bits_t keycode_modbit(keycode_t code)
     };
 }
 
-#if 0
 static keycode_t modbit_keycode(int bit_number)
 {
     return modbit_keycodes[bit_number];
 }
-#endif
 
 /* Current keyboard status */
 
@@ -149,7 +147,6 @@ static void simple_key_press(key_t key, keycode_t code)
 
 /* Temporary keycodes to be reverted on the next key event */
 
-#if 0
 #define MAX_TMP_KEYCODES 10
 static keycode_t tmp_keycodes[MAX_TMP_KEYCODES];
 static int tmp_keycode_count;
@@ -184,11 +181,9 @@ static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
     }
     tmp_keycode(code);
 }
-#endif
 
 /* Temporary additional handlers to support complex key functions */
 
-#if 0
 typedef bool (*tmp_handler_t)(key_t, bool);
 
 #define MAX_TMP_HANDLERS 10
@@ -224,7 +219,6 @@ static void remove_tmp_handler(tmp_handler_t func)
     }
     --tmp_handler_cnt;
 }
-#endif
 
 /* Key functions for the cases simple keycode mapping is not enough */
 
@@ -237,16 +231,15 @@ enum layers {
 static unsigned layer = 0;
 
 // forward declarations for key functions
-//static const intptr_t PROGMEM keymap[][KEY_COUNT];
-//static void key_press(key_t key);
-//static void key_release(key_t key);
+static const unsigned keymap[][KEY_COUNT];
+static void key_press(key_t key);
+static void key_release(key_t key);
 
 // key function type definition and macro to use it in keymap
 typedef void (*key_func_t)(key_t key);
-#define KCFUNC(m_arg_func) KC_NO
+#define KCFUNC(m_arg_func) (unsigned)m_arg_func
 
 // the actual key functions start here
-#if 0
 static void k_brace_left(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_7);}
 static void k_brace_right(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_0);}
 static void k_backslash(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_PLUS);}
@@ -280,7 +273,6 @@ static void k_prev_word(key_t key)
         simple_key_press(key, KC_W);
     }
 }
-#endif
 
 static void k_ctrl_x_b(key_t key)
 {
@@ -290,7 +282,6 @@ static void k_ctrl_x_b(key_t key)
     }
 }
 
-#if 0
 // tilde on FI keyboard: dead tilde plus space
 
 static void k_tilde(key_t key)
@@ -721,8 +712,6 @@ static void k_rctl_adia(key_t key)
     tap_start(&rctl_adia_state, key, FI_ADIA, KC_RCTL, rctl_adia_handler);
 }
 
-#endif
-
 /* The keymap */
 
 static const unsigned keymap[][KEY_COUNT] = {
@@ -738,7 +727,7 @@ static const unsigned keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, (unsigned)k_ctrl_x_b, KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KCFUNC(k_ctrl_x_b), KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
