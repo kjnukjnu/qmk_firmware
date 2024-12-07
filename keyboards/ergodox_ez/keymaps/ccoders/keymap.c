@@ -280,6 +280,7 @@ static void k_prev_word(key_t key)
         simple_key_press(key, KC_W);
     }
 }
+#endif
 
 static void k_ctrl_x_b(key_t key)
 {
@@ -289,6 +290,7 @@ static void k_ctrl_x_b(key_t key)
     }
 }
 
+#if 0
 // tilde on FI keyboard: dead tilde plus space
 
 static void k_tilde(key_t key)
@@ -736,7 +738,7 @@ static const unsigned keymap[][KEY_COUNT] = {
 
         FI_SECT, KCFUNC(k_pipe), FI_LABK, KCFUNC(k_greater_than), KC_ENT, KC_NO, KC_NO, KC_NO, KC_NO, KCFUNC(k_navigation_layer_on), KCFUNC(k_lbracket), KCFUNC(k_rbracket), KCFUNC(k_ad), KCFUNC(k_dead_tilde),
 
-        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, KCFUNC(k_ctrl_x_b), KC_BSPC, KC_NO,
+        KC_NO, KC_DEL, KC_LGUI, KC_LALT, FI_ARNG, KCFUNC(k_teams_mute), KC_MUTE, KC_RALT, KC_RGUI, KC_NO, KC_SPC, (unsigned)k_ctrl_x_b, KC_BSPC, KC_NO,
     },
 
     /* NAVIGATION */
