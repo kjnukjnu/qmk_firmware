@@ -4,6 +4,7 @@
 
 // TODO: build in docker container
 // TODO: check if there is superfluous debouncing in use?
+// TODO: disable oryx
 
 /* ccoders keymap
 
@@ -264,6 +265,13 @@ static void kb_led_set(int led, bool on)
     }
 }
 
+/* Other */
+
+static unsigned timer_diff(unsigned now, unsigned start)
+{
+    return now - start;
+}
+
 /* Key functions for the cases simple keycode mapping is not enough */
 
 // layer definitions used by our keymap
@@ -360,7 +368,36 @@ static void k_four_dollar(key_t key)
     }
 }
 
-// teams mute on/off (KC_NO if there are modifiers)
+// teams mute tap(toggle)/hold(momentary) on/off
+
+#define TEAMS_TOGGLE_TIMEOUT 500
+
+static struct teams_mute_tap_state
+{
+  uint16_t key_down;
+  key_t key;
+} teams_mute_tap_state;
+
+static bool teams_mute_handler(key_t key, bool pressed)
+{
+    if (key != KEY_NO)
+    {
+        keycode_send(-KC_SPC, -KC_LCTL);
+        remove_tmp_handler(teams_mute_handler);
+        if (key == teams_mute_tap_state.key &&
+            timer_diff(timer_read(), teams_mute_tap_state.key_down) <
+            TEAMS_TOGGLE_TIMEOUT)
+        {
+            for (uint16_t timer_start = timer_read();
+                 timer_diff(timer_read(), timer_start) < 100;)
+            {
+            }
+            keycode_send(KC_SPC, -KC_SPC);
+            return true;
+        }
+    }
+    return false;
+}
 
 static void k_teams_mute(key_t key)
 {
@@ -368,7 +405,10 @@ static void k_teams_mute(key_t key)
     {
         return;
     }
-    tmp_keycode(KC_LSFT, KC_LCTL, KC_M);
+    keycode_send(KC_LCTL, KC_SPC);
+    teams_mute_tap_state.key = key;
+    teams_mute_tap_state.key_down = timer_read();
+    add_tmp_handler(teams_mute_handler);
 }
 
 // mechanical shift lock: kind of caps lock when tapping both shifts
@@ -407,11 +447,6 @@ static void shift_start(void)
     shift_state.layer = layer;
     shift_state.start_time = timer_read();
     add_tmp_handler(shift_key_handler);
-}
-
-static unsigned timer_diff(unsigned now, unsigned start)
-{
-    return now - start;
 }
 
 static bool shift_locked_handler(key_t key, bool pressed)
