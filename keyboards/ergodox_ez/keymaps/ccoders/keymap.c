@@ -392,7 +392,7 @@ static bool teams_mute_handler(key_t key, bool pressed)
                  timer_diff(timer_read(), timer_start) < 100;)
             {
             }
-            keycode_send(KC_SPC, -KC_SPC);
+            keycode_send(KC_LSFT, KC_LCTL, KC_M, -KC_M, -KC_LCTL, -KC_LSFT);
             return true;
         }
     }
