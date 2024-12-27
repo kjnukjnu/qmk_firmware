@@ -368,6 +368,40 @@ static void k_four_dollar(key_t key)
     }
 }
 
+// mouse directions or scroll wheel
+
+static void k_mouse_dir_or_wheel(key_t key, keycode_t dir, keycode_t wheel)
+{
+  if (modifiers == MOD_BIT_LALT)
+    {
+      tmp_keycode(-KC_LALT, wheel);
+    }
+  else
+    {
+      simple_key_press(key, dir);
+    }
+}
+
+static void k_ms_u(key_t key)
+{
+  k_mouse_dir_or_wheel(key, KC_MS_U, KC_WH_U);
+}
+
+static void k_ms_l(key_t key)
+{
+  k_mouse_dir_or_wheel(key, KC_MS_L, KC_WH_L);
+}
+
+static void k_ms_d(key_t key)
+{
+  k_mouse_dir_or_wheel(key, KC_MS_D, KC_WH_D);
+}
+
+static void k_ms_r(key_t key)
+{
+  k_mouse_dir_or_wheel(key, KC_MS_R, KC_WH_R);
+}
+
 // teams mute tap(toggle)/hold(momentary) on/off
 
 #define TEAMS_TOGGLE_TIMEOUT 500
@@ -814,9 +848,9 @@ static const intptr_t keymap[][KEY_COUNT] = {
     {
         KC_ESC, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_NO, KC_NO, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11,
 
-        KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_BTN2, KC_MS_U, KC_BTN1, KC_NO, KC_F12,
+        KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_BTN2, KCFUNC(k_ms_u), KC_BTN1, KC_NO, KC_F12,
 
-        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KC_MS_L, KC_MS_D, KC_MS_R, KC_WFWD, KC_RCTL,
+        KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KCFUNC(k_ms_l), KCFUNC(k_ms_d), KCFUNC(k_ms_r), KC_WFWD, KC_RCTL,
 
         KCFUNC(k_lsft), KC_NO, KC_NO, KC_NO, KC_PGDN, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MPLY, KC_NO, FI_MINS, KCFUNC(k_rsft),
 
