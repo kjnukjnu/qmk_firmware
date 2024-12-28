@@ -2,10 +2,6 @@
 #include "version.h"
 #include "keymap_finnish.h"
 
-// TODO: build in docker container
-// TODO: check if there is superfluous debouncing in use?
-// TODO: disable oryx
-
 /* ccoders keymap
 
    In addition to defining the keymap, this file replaces the normal qmk event
@@ -26,7 +22,7 @@
 
 /* Physical switch on the keyboard. */
 
-typedef uint8_t key_t;
+typedef uint8_t switch_t;
 #define KEY_NO 255
 #define KEY_COUNT (MATRIX_ROWS * MATRIX_COLS)
 
@@ -140,7 +136,7 @@ static void keycode_send(keycode_t code)
 
 #define keycode_send(...) CALL_FUNC(keycode_send, __VA_ARGS__)
 
-static void simple_key_press(key_t key, keycode_t code)
+static void simple_key_press(switch_t key, keycode_t code)
 {
     keycode_send(code);
     key_release_info[key] = code;
@@ -185,7 +181,7 @@ static void tmp_modifiers_and_keycode(mod_bits_t mod_bits, keycode_t code)
 
 /* Temporary additional handlers to support complex key functions */
 
-typedef bool (*tmp_handler_t)(key_t, bool);
+typedef bool (*tmp_handler_t)(switch_t, bool);
 
 #define MAX_TMP_HANDLERS 10
 static tmp_handler_t tmp_handlers[MAX_TMP_HANDLERS];
@@ -284,26 +280,26 @@ static unsigned layer = 0;
 
 // forward declarations for key functions
 static const intptr_t keymap[][KEY_COUNT];
-static void key_press(key_t key);
-static void key_release(key_t key);
+static void key_press(switch_t key);
+static void key_release(switch_t key);
 
 // key function type definition and macro to use it in keymap
-typedef void (*key_func_t)(key_t key);
+typedef void (*key_func_t)(switch_t key);
 #define KCFUNC(m_arg_func) ((intptr_t)(m_arg_func))
 
 // the actual key functions start here
 
-static void k_brace_left(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_7);}
-static void k_brace_right(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_0);}
-static void k_backslash(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_PLUS);}
-static void k_pipe(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_LABK);}
-static void k_greater_than(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_LSHIFT, FI_LABK);}
-static void k_lbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_8);}
-static void k_rbracket(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_9);}
-static void k_ad(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_2);}
-static void k_dead_tilde(key_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_DIAE);}
+static void k_brace_left(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_7);}
+static void k_brace_right(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_0);}
+static void k_backslash(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_PLUS);}
+static void k_pipe(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_LABK);}
+static void k_greater_than(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_LSHIFT, FI_LABK);}
+static void k_lbracket(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_8);}
+static void k_rbracket(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_9);}
+static void k_ad(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, KC_2);}
+static void k_dead_tilde(switch_t key) {tmp_modifiers_and_keycode(MOD_BIT_RALT, FI_DIAE);}
 
-static void k_next_word(key_t key)
+static void k_next_word(switch_t key)
 {
     if (!modifiers)
     {
@@ -315,7 +311,7 @@ static void k_next_word(key_t key)
     }
 }
 
-static void k_prev_word(key_t key)
+static void k_prev_word(switch_t key)
 {
     if (!modifiers)
     {
@@ -327,7 +323,7 @@ static void k_prev_word(key_t key)
     }
 }
 
-static void k_ctrl_x_b(key_t key)
+static void k_ctrl_x_b(switch_t key)
 {
     if (!modifiers)
     {
@@ -337,7 +333,7 @@ static void k_ctrl_x_b(key_t key)
 
 // tilde on FI keyboard: dead tilde plus space
 
-static void k_tilde(key_t key)
+static void k_tilde(switch_t key)
 {
   if (keycode_active(KC_RALT) ||
       keycode_active(FI_DIAE) ||
@@ -350,7 +346,7 @@ static void k_tilde(key_t key)
 
 // special handling for shift-4 to produce $ on FI keyboard
 
-static void k_four_dollar(key_t key)
+static void k_four_dollar(switch_t key)
 {
     if ((modifiers & (MOD_BIT_LSHIFT | MOD_BIT_RSHIFT)) &&
         !(modifiers & (MOD_BIT_LCTRL | MOD_BIT_LALT | MOD_BIT_LGUI | MOD_BIT_RCTRL | MOD_BIT_RALT | MOD_BIT_RGUI)))
@@ -370,7 +366,7 @@ static void k_four_dollar(key_t key)
 
 // mouse directions or scroll wheel
 
-static void k_mouse_dir_or_wheel(key_t key, keycode_t dir, keycode_t wheel)
+static void k_mouse_dir_or_wheel(switch_t key, keycode_t dir, keycode_t wheel)
 {
   if (modifiers == MOD_BIT_LALT)
     {
@@ -382,22 +378,22 @@ static void k_mouse_dir_or_wheel(key_t key, keycode_t dir, keycode_t wheel)
     }
 }
 
-static void k_ms_u(key_t key)
+static void k_ms_u(switch_t key)
 {
   k_mouse_dir_or_wheel(key, KC_MS_U, KC_WH_U);
 }
 
-static void k_ms_l(key_t key)
+static void k_ms_l(switch_t key)
 {
   k_mouse_dir_or_wheel(key, KC_MS_L, KC_WH_L);
 }
 
-static void k_ms_d(key_t key)
+static void k_ms_d(switch_t key)
 {
   k_mouse_dir_or_wheel(key, KC_MS_D, KC_WH_D);
 }
 
-static void k_ms_r(key_t key)
+static void k_ms_r(switch_t key)
 {
   k_mouse_dir_or_wheel(key, KC_MS_R, KC_WH_R);
 }
@@ -409,10 +405,10 @@ static void k_ms_r(key_t key)
 static struct teams_mute_tap_state
 {
   uint16_t key_down;
-  key_t key;
+  switch_t key;
 } teams_mute_tap_state;
 
-static bool teams_mute_handler(key_t key, bool pressed)
+static bool teams_mute_handler(switch_t key, bool pressed)
 {
     if (key != KEY_NO)
     {
@@ -433,7 +429,7 @@ static bool teams_mute_handler(key_t key, bool pressed)
     return false;
 }
 
-static void k_teams_mute(key_t key)
+static void k_teams_mute(switch_t key)
 {
     if (modifiers != 0)
     {
@@ -460,10 +456,10 @@ static struct shift_state
     uint16_t start_time;
 } shift_state;
 
-static void k_lsft(key_t key);
-static void k_rsft(key_t key);
+static void k_lsft(switch_t key);
+static void k_rsft(switch_t key);
 
-static bool shift_key_handler(key_t key, bool pressed)
+static bool shift_key_handler(switch_t key, bool pressed)
 {
     if (key != KEY_NO && pressed &&
         keymap[shift_state.layer][key] != KCFUNC(k_lsft) &&
@@ -483,7 +479,7 @@ static void shift_start(void)
     add_tmp_handler(shift_key_handler);
 }
 
-static bool shift_locked_handler(key_t key, bool pressed)
+static bool shift_locked_handler(switch_t key, bool pressed)
 {
     if (key != KC_NO && pressed)
     {
@@ -528,7 +524,7 @@ static void shift_finish(void)
     remove_tmp_handler(shift_key_handler);
 }
 
-static void shift_down(key_t key, keycode_t kc, void (*up_func)(key_t key))
+static void shift_down(switch_t key, keycode_t kc, void (*up_func)(switch_t key))
 {
     key_release_info[key] = KCFUNC(up_func);
     if (!shift_state.count++)
@@ -554,10 +550,10 @@ static void shift_up(keycode_t code)
     }
 }
 
-static void k_lsft_release(key_t key) {shift_up(KC_LSFT);}
-static void k_rsft_release(key_t key) {shift_up(KC_RSFT);}
-static void k_lsft(key_t key) {shift_down(key, KC_LSFT, k_lsft_release);}
-static void k_rsft(key_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
+static void k_lsft_release(switch_t key) {shift_up(KC_LSFT);}
+static void k_rsft_release(switch_t key) {shift_up(KC_RSFT);}
+static void k_lsft(switch_t key) {shift_down(key, KC_LSFT, k_lsft_release);}
+static void k_rsft(switch_t key) {shift_down(key, KC_RSFT, k_rsft_release);}
 
 // layer switch from BASE to NAVIGATION
 //   tap: switch layer
@@ -569,13 +565,13 @@ static struct layer_switch_state
 {
     uint16_t timer_start;
     bool hold_enabled;
-    key_t key;
+    switch_t key;
     enum { layer_switch_key, layer_switch_hold } state;
 } layer_switch_state;
 
-static bool layer_switch_handler(key_t key, bool pressed);
+static bool layer_switch_handler(switch_t key, bool pressed);
 
-static bool layer_switch_event_key(key_t key, bool pressed)
+static bool layer_switch_event_key(switch_t key, bool pressed)
 {
     if (key == layer_switch_state.key) // !pressed
     {
@@ -615,7 +611,7 @@ static bool layer_switch_event_key(key_t key, bool pressed)
     return false;
 }
 
-static bool layer_switch_event_hold(key_t key, bool pressed)
+static bool layer_switch_event_hold(switch_t key, bool pressed)
 {
     if (key == layer_switch_state.key) // !pressed
     {
@@ -627,7 +623,7 @@ static bool layer_switch_event_hold(key_t key, bool pressed)
     return false;
 }
 
-static bool layer_switch_handler(key_t key, bool pressed)
+static bool layer_switch_handler(switch_t key, bool pressed)
 {
     switch (layer_switch_state.state)
     {
@@ -640,7 +636,7 @@ static bool layer_switch_handler(key_t key, bool pressed)
     }
 }
 
-static void layer_switch_start(key_t key,
+static void layer_switch_start(switch_t key,
                                bool hold_enabled)
 {
     layer_switch_state.timer_start = timer_read();
@@ -655,7 +651,7 @@ static void layer_switch_start(key_t key,
     add_tmp_handler(layer_switch_handler);
 }
 
-static void k_navigation_layer_on(key_t key)
+static void k_navigation_layer_on(switch_t key)
 {
     layer_switch_start(key, true);
 }
@@ -664,7 +660,7 @@ static void k_navigation_layer_on(key_t key)
 //   tap: switch layer
 //   hold: -
 
-static void k_navigation_layer_off(key_t key)
+static void k_navigation_layer_off(switch_t key)
 {
     layer_switch_start(key, false);
 }
@@ -688,13 +684,13 @@ struct tap_state
     uint16_t mystery_key_down;
     keycode_t tap;
     keycode_t hold;
-    key_t key;
-    key_t mystery;
+    switch_t key;
+    switch_t mystery;
     enum { tap_key, tap_hold, tap_key_mystery } state;
 };
 
 static void tap_start(struct tap_state *state,
-                      key_t key,
+                      switch_t key,
                       keycode_t tap,
                       keycode_t hold,
                       tmp_handler_t handler)
@@ -711,7 +707,7 @@ static void tap_start(struct tap_state *state,
     key_release_info[state->key] = KC_NO;
 }
 
-static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event_key(struct tap_state *state, switch_t key, bool pressed)
 {
     if (key == state->key) // !pressed
     {
@@ -738,7 +734,7 @@ static bool tap_event_key(struct tap_state *state, key_t key, bool pressed)
     return false;
 }
 
-static bool tap_event_hold(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event_hold(struct tap_state *state, switch_t key, bool pressed)
 {
     if (key == state->key) // !pressed
     {
@@ -749,7 +745,7 @@ static bool tap_event_hold(struct tap_state *state, key_t key, bool pressed)
     return false;
 }
 
-static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event_key_mystery(struct tap_state *state, switch_t key, bool pressed)
 {
     if (key == state->mystery) // !pressed
     {
@@ -794,7 +790,7 @@ static bool tap_event_key_mystery(struct tap_state *state, key_t key, bool press
     return false;
 }
 
-static bool tap_event(struct tap_state *state, key_t key, bool pressed)
+static bool tap_event(struct tap_state *state, switch_t key, bool pressed)
 {
     switch (state->state)
     {
@@ -811,12 +807,12 @@ static bool tap_event(struct tap_state *state, key_t key, bool pressed)
 
 static struct tap_state rctl_adia_state;
 
-static bool rctl_adia_handler(key_t key, bool pressed)
+static bool rctl_adia_handler(switch_t key, bool pressed)
 {
     return tap_event(&rctl_adia_state, key, pressed);
 }
 
-static void k_rctl_adia(key_t key)
+static void k_rctl_adia(switch_t key)
 {
     if (layer != BASE)
     {
@@ -862,7 +858,7 @@ static const intptr_t keymap[][KEY_COUNT] = {
 
 /* Event handling (replaces qmk's default event handling */
 
-static void key_press(key_t key)
+static void key_press(switch_t key)
 {
     const intptr_t *key_info = &keymap[layer][key];
 
@@ -877,7 +873,7 @@ static void key_press(key_t key)
     }
 }
 
-static void key_release(key_t key)
+static void key_release(switch_t key)
 {
     intptr_t *key_info = &key_release_info[key];
 
@@ -901,7 +897,7 @@ static void clean_tmp_keycodes(void)
     }
 }
 
-static bool call_tmp_handlers(key_t key, bool pressed)
+static bool call_tmp_handlers(switch_t key, bool pressed)
 {
     bool ret = false;
     for (int i = 0; i < tmp_handler_cnt; ++i)
