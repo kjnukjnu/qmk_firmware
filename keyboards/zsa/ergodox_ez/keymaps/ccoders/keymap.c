@@ -20,15 +20,11 @@
    structure where the keymaps are separated from the generic logic.
 */
 
-/* Physical switch on the keyboard. */
-
-typedef uint8_t switch_t;
+typedef uint8_t switch_t; // Physical switch on the keyboard.
 #define KEY_NO 255
 #define KEY_COUNT (MATRIX_ROWS * MATRIX_COLS)
 
-/* HID keycode reported via USB: negative == release. */
-
-typedef int keycode_t;
+typedef int keycode_t; // HID keycode reported via USB: negative == release.
 
 static keycode_t keycode_plain(keycode_t code)
 {
@@ -40,7 +36,7 @@ static bool keycode_is_press(keycode_t code)
     return code >= 0;
 }
 
-/* Macros to call a function for each of the arguments. */
+/* CALL_FUNC: call a function for each of the arguments. */
 
 #define _CALL_FUNC_1(func, a) func(a)
 #define _CALL_FUNC_2(func, a, b) func(a); func(b)

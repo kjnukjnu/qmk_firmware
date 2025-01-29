@@ -19,7 +19,10 @@
         "device_version": "1.0.0",
         "vid": "0x3297"
     },
-    "debounce": 20,
+    "build": {
+        "debounce_type": "sym_eager_pk"
+    },
+    "debounce": 30,
     "rgb_matrix": {
         "driver": "is31fl3731",
         "layout": [
