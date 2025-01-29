@@ -30,7 +30,7 @@
         }
     },
     "build": {
-        "debounce_type": "sym_eager_pr"
+        "debounce_type": "sym_eager_pk"
     },
     "ws2812": {
         "pin": "D7",
@@ -75,7 +75,7 @@
     },
     "processor": "atmega32u4",
     "bootloader": "halfkay",
-    "debounce": 30,
+    "debounce": 40,
     "tapping": {
         "toggle": 1
     },
