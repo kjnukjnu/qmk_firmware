@@ -386,7 +386,14 @@ static void k_ms_l(switch_t key)
 
 static void k_ms_d(switch_t key)
 {
-  k_mouse_dir_or_wheel(key, KC_MS_D, KC_WH_D);
+  if (modifiers == MOD_BIT_LCTRL)
+    {
+      simple_key_press(key, KC_K);
+    }
+  else
+    {
+      k_mouse_dir_or_wheel(key, KC_MS_D, KC_WH_D);
+    }
 }
 
 static void k_ms_r(switch_t key)
