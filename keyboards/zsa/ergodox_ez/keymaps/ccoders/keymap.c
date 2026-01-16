@@ -360,6 +360,38 @@ static void k_four_dollar(switch_t key)
     }
 }
 
+// ctrl-W/alt-W is Cut/Copy
+
+static void k_w(switch_t key)
+{
+    if (modifiers == MOD_BIT_RCTRL)
+    {
+        tmp_keycode(-KC_RCTL, KC_CUT);
+    }
+    else if (modifiers == MOD_BIT_LALT)
+    {
+        tmp_keycode(-KC_LALT, KC_COPY);
+    }
+    else
+    {
+        simple_key_press(key, KC_W);
+    }
+}
+
+// ctrl-Y is Paste
+
+static void k_y(switch_t key)
+{
+    if (modifiers == MOD_BIT_LCTRL)
+    {
+        tmp_keycode(-KC_LCTL, KC_PASTE);
+    }
+    else
+    {
+        simple_key_press(key, KC_Y);
+    }
+}
+
 // mouse directions or scroll wheel
 
 static void k_mouse_dir_or_wheel(switch_t key, keycode_t dir, keycode_t wheel)
@@ -839,7 +871,7 @@ static const intptr_t keymap[][KEY_COUNT] = {
     {
         KC_ESC, KC_1, KC_2, KC_3, KCFUNC(k_four_dollar), KC_5, FI_DIAE, FI_ACUT, KC_6, KC_7, KC_8, KC_9, KC_0, FI_PLUS,
 
-        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,
+        KC_TAB, KC_Q, KCFUNC(k_w), KC_E, KC_R, KC_T, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KCFUNC(k_y), KC_U, KC_I, KC_O, KC_P, KC_BSLS,
 
         KC_LCTL, KC_A, KC_S, KC_D, KC_F, KC_G, KC_NO, KC_NO, KC_H, KC_J, KC_K, KC_L, FI_ODIA, KCFUNC(k_rctl_adia),
 
@@ -854,7 +886,7 @@ static const intptr_t keymap[][KEY_COUNT] = {
     {
         KC_ESC, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_NO, KC_NO, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11,
 
-        KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KC_Y, KC_BTN2, KCFUNC(k_ms_u), KC_BTN1, KC_NO, KC_F12,
+        KC_TAB, KC_PGUP, KCFUNC(k_prev_word), KC_UP, KCFUNC(k_next_word), KC_NO, KCFUNC(k_brace_left), KCFUNC(k_brace_right), KCFUNC(k_y), KC_BTN2, KCFUNC(k_ms_u), KC_BTN1, KC_NO, KC_F12,
 
         KC_LCTL, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END, KC_NO, KC_NO, KC_WBAK, KCFUNC(k_ms_l), KCFUNC(k_ms_d), KCFUNC(k_ms_r), KC_WFWD, KC_RCTL,
 
