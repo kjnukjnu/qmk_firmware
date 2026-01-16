@@ -931,26 +931,6 @@ static void key_release(switch_t key)
     *key_info = KC_NO;
 }
 
-static bool tmp_keycode_conflict(switch_t key)
-{
-    const intptr_t *key_info = &keymap[layer][key];
-
-    if (*key_info > 255)
-    {
-        // Not sure if there's a conflict (callback defined). Do safe option.
-        return true;
-    }
-    for (int i = 0; i < tmp_keycode_count; ++i)
-    {
-        if (tmp_keycodes[i] == *key_info)
-        {
-            // Must clear tmp_keycodes before releasing key.
-            return true;
-        }
-    }
-    return false;
-}
-
 static void clean_tmp_keycodes(void)
 {
     while (tmp_keycode_count > 0)
@@ -980,10 +960,11 @@ bool user_action_exec(keyevent_t event)
     if (event.type == KEY_EVENT)
     {
         uint16_t key = event.key.row + event.key.col * MATRIX_ROWS;
-        if (event.pressed || tmp_keycode_conflict(key))
-        {
-            clean_tmp_keycodes();
-        }
+        /* TODO: allow removal of ordinary keys that are not part of the
+         * temporary keys without cleaning the tmp_keycodes. This makes the
+         * sequence SHIFT/5/4/-5 stay in a state where the autorepeat of $
+         * works. */
+        clean_tmp_keycodes();
         if (!call_tmp_handlers(key, event.pressed))
         {
             if (event.pressed)
